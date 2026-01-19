@@ -84,7 +84,7 @@ const EngineeringAssistant: React.FC = () => {
   };
 
   return (
-    <section id="engineering-chat" className="py-24 bg-slate-50 dark:bg-dark-bg transition-colors relative overflow-hidden">
+    <section id="chat" className="py-24 bg-slate-50 dark:bg-dark-bg transition-colors relative overflow-hidden">
         {/* Decorative elements - Engineering style */}
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-blue-100 dark:bg-blue-900/10 rounded-full blur-3xl opacity-50"></div>
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-72 h-72 bg-slate-200 dark:bg-slate-800/20 rounded-full blur-3xl opacity-50"></div>

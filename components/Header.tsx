@@ -15,7 +15,6 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
     { label: 'الرئيسية', id: 'home' },
     { label: 'المهارات', id: 'skills' },
     { label: 'أعمالي', id: 'portfolio' },
-    { label: 'تخيل مساحتك', id: 'ai-generator' },
     { label: 'الاستشارات', id: 'chat' },
   ];
 
