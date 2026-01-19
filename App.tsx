@@ -6,14 +6,20 @@ import Portfolio from './components/Portfolio';
 import ImageGenerator from './components/ImageGenerator';
 import ChatAssistant from './components/ChatAssistant';
 import Footer from './components/Footer';
+import Evaluation from './components/Evaluation';
 import { Theme } from './types';
 
 function App() {
-  // Default to Dark Mode as per requirements
+  // Default to Dark Mode
   const [theme, setTheme] = useState<Theme>(Theme.DARK);
 
+  // Scroll to top عند تحميل الصفحة
   useEffect(() => {
-    // Check initial preference, but default to dark if not set
+    window.scrollTo(0, 0);
+  }, []);
+
+  // ضبط الثيم عند التحميل
+  useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme) {
       setTheme(savedTheme);
@@ -22,6 +28,7 @@ function App() {
     }
   }, []);
 
+  // تطبيق الثيم على الـ document
   useEffect(() => {
     const root = window.document.documentElement;
     if (theme === Theme.DARK) {
@@ -33,7 +40,7 @@ function App() {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === Theme.DARK ? Theme.LIGHT : Theme.DARK);
+    setTheme(prev => (prev === Theme.DARK ? Theme.LIGHT : Theme.DARK));
   };
 
   return (
@@ -45,6 +52,7 @@ function App() {
         <Portfolio />
         {/* <ImageGenerator /> */}
         <ChatAssistant />
+        <Evaluation />
       </main>
       <Footer />
     </div>

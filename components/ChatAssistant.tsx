@@ -13,6 +13,7 @@ const EngineeringAssistant: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const initialMountRef = useRef<boolean>(true);
   
   const chatSessionRef = useRef<Chat | null>(null);
 
@@ -21,6 +22,10 @@ const EngineeringAssistant: React.FC = () => {
   };
 
   useEffect(() => {
+    if (initialMountRef.current) {
+      initialMountRef.current = false;
+      return;
+    }
     scrollToBottom();
   }, [messages]);
 
