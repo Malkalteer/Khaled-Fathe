@@ -39,10 +39,10 @@ const Hero: React.FC = () => {
         <div className="flex-1 text-left md:text-right space-y-6 md:order-2">
           <div className="flex flex-col items-end md:items-start text-right md:text-left rtl:md:text-right rtl:items-start">
              <h2 className="text-xl font-semibold text-primary-500 mb-2">مرحباً بكم في عالمي</h2>
-             <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight text-gray-900 dark:text-white">
+             <h1 className="text-6xl md:text-5xl font-bold mb-4 leading-tight text-gray-900 dark:text-white">
                المهندس <span className="text-primary-500">خالد</span>
                <br />
-               للتصميم و الCNC
+               للتصاميم الهندسية <p className='text-4xl mt-3'>(CNC Designs)</p>
              </h1>
              <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-lg leading-relaxed">
                نحول مساحتك إلى تحفة فنية تعكس شخصيتك. دمج بين الأناقة العصرية والراحة الوظيفية لخلق بيئة تلهمك كل يوم.
