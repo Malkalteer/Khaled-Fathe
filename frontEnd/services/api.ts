@@ -21,7 +21,7 @@ export const api = {
   uploadImage: async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append('image', file);
-    const res = await fetch(`${API_URL}/upload`, {
+    const res = await fetch(`${API_URL}/api/upload`, {
       method: 'POST',
       body: formData,
     });
@@ -30,18 +30,18 @@ export const api = {
     return `${API_URL}${data.url}`;
   },
   getCategories: async (): Promise<Category[]> => {
-    const res = await fetch(`${API_URL}/categories`);
+    const res = await fetch(`${API_URL}/api/categories`);
     const data = await res.json();
     // إضافة الكل
     return [{ _id: 'all', name: 'الكل', image: 'https://static.vecteezy.com/system/resources/thumbnails/006/201/197/small_2x/cnc-computer-numerical-control-icon-vector.jpg' }, ...data];
   },
   getProjects: async (): Promise<Project[]> => {
-    const res = await fetch(`${API_URL}/projects`);
+    const res = await fetch(`${API_URL}/api/projects`);
     const data = await res.json();
     return data;
   },
   addCategory: async (cat: Omit<Category, '_id'>): Promise<Category> => {
-    const res = await fetch(`${API_URL}/categories`, {
+    const res = await fetch(`${API_URL}/api/categories`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cat),
@@ -49,7 +49,7 @@ export const api = {
     return await res.json();
   },
   addProject: async (proj: Omit<Project, '_id'>): Promise<Project> => {
-    const res = await fetch(`${API_URL}/projects`, {
+    const res = await fetch(`${API_URL}/api/projects`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -61,20 +61,20 @@ export const api = {
     return await res.json();
   },
   deleteCategory: async (id: string) => {
-    await fetch(`${API_URL}/categories/${id}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/api/categories/${id}`, { method: 'DELETE' });
   },
   deleteProject: async (id: string) => {
-    await fetch(`${API_URL}/projects/${id}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/api/projects/${id}`, { method: 'DELETE' });
   },
   updateCategory: async (cat: Category) => {
-    await fetch(`${API_URL}/categories/${cat._id}`, {
+    await fetch(`${API_URL}/api/categories/${cat._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: cat.name, image: cat.image }),
     });
   },
   updateProject: async (proj: Project) => {
-    await fetch(`${API_URL}/projects/${proj._id}`, {
+    await fetch(`${API_URL}/api/projects/${proj._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

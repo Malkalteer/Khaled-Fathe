@@ -1,4 +1,4 @@
-const express = require('express');
+index-BAFcG2Bq.js:185  GET https://khaled-fathe.onrender.com/categories 404 (Not Found)const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');

@@ -1,23 +1,3 @@
-// حذف مستخدم
-exports.deleteUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const deleted = await User.findByIdAndDelete(id);
-    if (!deleted) return res.status(404).json({ message: 'User not found' });
-    res.json({ message: 'User deleted' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-// جلب جميع المستخدمين (للأدمن)
-exports.getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find({}, { password: 0 });
-    res.json({ users });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 
@@ -54,6 +34,7 @@ exports.register = async (req, res) => {
     });
 
   } catch (error) {
+    console.error("Register error:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -83,6 +64,30 @@ exports.login = async (req, res) => {
     });
   } catch (error) {
     console.error("Login error:", error);
-    // res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// جلب جميع المستخدمين (للأدمن)
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}, { password: 0 });
+    res.json({ users });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// حذف مستخدم
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await User.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ message: 'User not found' });
+    res.json({ message: 'User deleted' });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ error: error.message });
   }
 };
