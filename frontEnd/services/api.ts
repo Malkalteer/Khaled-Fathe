@@ -15,7 +15,7 @@ export interface Project {
   description: string;
 }
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://khaled-fathe.onrender.com';
 
 export const api = {
   uploadImage: async (file: File): Promise<string> => {
