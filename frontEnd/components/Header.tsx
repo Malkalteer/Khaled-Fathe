@@ -85,7 +85,11 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
              >
                {item.label}
              </button>
+             
           ))}
+          {isAdmin() && (
+                <Link to="/admin" className="hidden md:inline-block text-sm bg-green-500 text-white px-3 py-1 rounded-md hover:opacity-90">إدارة</Link>
+              )}
         </nav>
 
         {/* Actions */}
@@ -107,9 +111,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
             <>
               <Link to="/register" className="hidden md:inline-block text-sm text-primary-600 dark:text-primary-400 font-medium px-3 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">تسجيل</Link>
               <Link to="/login" className="hidden md:inline-block text-sm bg-primary-500 text-white px-3 py-1 rounded-md hover:opacity-90">دخول</Link>
-              {isAdmin() && (
-                <Link to="/admin" className="hidden md:inline-block text-sm bg-green-500 text-white px-3 py-1 rounded-md hover:opacity-90">إدارة</Link>
-              )}
+              
             </>
           )}
 
