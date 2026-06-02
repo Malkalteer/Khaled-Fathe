@@ -27,7 +27,7 @@ export const api = {
     });
     if (!res.ok) throw new Error('فشل رفع الصورة');
     const data = await res.json();
-    return `http://localhost:5000${data.url}`;
+    return `${API_URL}${data.url}`;
   },
   getCategories: async (): Promise<Category[]> => {
     const res = await fetch(`${API_URL}/categories`);

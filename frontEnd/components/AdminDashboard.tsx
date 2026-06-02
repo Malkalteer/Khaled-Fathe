@@ -13,7 +13,7 @@ interface Review {
   username: string;
   text: string;
 }
-
+const API_URL = 'https://khaled-fathe.onrender.com';
 const AdminDashboard: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -36,11 +36,11 @@ const AdminDashboard: React.FC = () => {
       setCategories(await api.getCategories());
       setProjects(await api.getProjects());
       // جلب المستخدمين من الباك اند
-      const usersRes = await fetch('http://localhost:5000/api/auth/users');
+      const usersRes = await fetch(`${API_URL}/api/auth/users`);
       const usersData = await usersRes.json();
       setUsers(Array.isArray(usersData) ? usersData : usersData.users || []);
       // جلب التعليقات من الباك اند
-      const reviewsRes = await fetch('http://localhost:5000/api/reviews');
+      const reviewsRes = await fetch(`${API_URL}/api/reviews`);
       const reviewsData = await reviewsRes.json();
       setReviews(Array.isArray(reviewsData) ? reviewsData : reviewsData.reviews || []);
       setLoading(false);
@@ -50,14 +50,14 @@ const AdminDashboard: React.FC = () => {
   // حذف مستخدم
   const handleDeleteUser = async (id: string) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
-    await fetch(`http://localhost:5000/api/auth/users/${id}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/api/auth/users/${id}`, { method: 'DELETE' });
     setUsers(users => users.filter(u => u._id !== id));
   };
 
   // حذف تعليق
   const handleDeleteReview = async (id: string) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا التعليق؟')) return;
-    await fetch(`http://localhost:5000/api/reviews/${id}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/api/reviews/${id}`, { method: 'DELETE' });
     setReviews(reviews => reviews.filter(r => r._id !== id));
   };
 

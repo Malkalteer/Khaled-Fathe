@@ -24,7 +24,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit }) => {
       const rawUser = localStorage.getItem('user');
       if (!rawUser) throw new Error('يجب تسجيل الدخول أولاً');
       const user = JSON.parse(rawUser);
-      const res = await fetch('http://localhost:5000/api/reviews', {
+      const res = await fetch('https://khaled-fathe.onrender.com/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

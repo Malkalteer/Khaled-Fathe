@@ -12,7 +12,7 @@ const Register: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    fetch('http://localhost:5000/api/auth/register', {
+    fetch('https://khaled-fathe.onrender.com/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: name, email, password, phone })

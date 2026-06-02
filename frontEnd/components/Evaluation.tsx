@@ -9,7 +9,7 @@ type Review = {
 };
 
 const fetchReviews = async () => {
-  const res = await fetch('http://localhost:5000/api/reviews');
+  const res = await fetch('https://khaled-fathe.onrender.com/api/reviews');
   if (!res.ok) throw new Error('فشل في جلب التعليقات');
   const data = await res.json();
   // إذا كان backend يعيد { reviews: [...] }
