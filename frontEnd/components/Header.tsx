@@ -52,6 +52,17 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
     }
   };
 
+  const isAdmin = () => {
+    const user = localStorage.getItem('user');
+    if (!user) return false;
+    try {
+      const parsed = JSON.parse(user);
+      return parsed.email === 'khaled@khaled';
+    } catch {
+      return false;
+    }
+  };
+
   return (
     <header className="fixed w-full top-0 z-50 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
       <div className="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -96,6 +107,9 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
             <>
               <Link to="/register" className="hidden md:inline-block text-sm text-primary-600 dark:text-primary-400 font-medium px-3 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">تسجيل</Link>
               <Link to="/login" className="hidden md:inline-block text-sm bg-primary-500 text-white px-3 py-1 rounded-md hover:opacity-90">دخول</Link>
+              {isAdmin() && (
+                <Link to="/admin" className="hidden md:inline-block text-sm bg-green-500 text-white px-3 py-1 rounded-md hover:opacity-90">إدارة</Link>
+              )}
             </>
           )}
 
