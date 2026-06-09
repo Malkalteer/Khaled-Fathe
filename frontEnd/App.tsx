@@ -12,6 +12,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ReviewsAdmin from './components/ReviewsAdmin';
 import AdminDashboard from './components/AdminDashboard';
 import CategoryPage from './components/CategoryPage';
+import { HelmetProvider } from 'react-helmet-async';
   // التحقق من الأدمن
   const isAdmin = () => {
     const user = localStorage.getItem('user');
@@ -77,6 +78,7 @@ function App() {
   );
 
   return (
+    <HelmetProvider>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -88,6 +90,7 @@ function App() {
         <Route path="/admin" element={isAdmin() ? <AdminDashboard /> : <div className="text-center mt-10 text-red-500">غير مصرح لك بالدخول</div>} />
       </Routes>
     </BrowserRouter>
+    </HelmetProvider>
   );
 }
 

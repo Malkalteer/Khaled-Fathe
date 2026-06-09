@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { api, Category, Project } from '../services/api';
+import { Helmet } from 'react-helmet-async';
 
 // الحفاظ على كامبوننت الـ Modal الخاص بك داخل الصفحة الجديدة ليعمل بكفاءة عند اختيار أي منتج
 type ProductDetailsModalProps = {
@@ -91,8 +92,21 @@ const filteredProjects = projects.filter(project => {
   return project.category === categoryId;
 });
 
+// 2. قم بإضافة هذا السطر الجديد هنا لحل المشكلة وتوليد الاسم بشكل صحيح:
+const currentCategoryName = categoryId === 'all' 
+  ? 'جميع التصاميم والمشاريع' 
+  : (currentCategory?.name || 'جاري التحميل...');
+
   return (
     <div className="py-12 bg-gray-50 dark:bg-dark-bg min-h-screen text-right" style={{ direction: 'rtl' }}>
+      <Helmet>
+      <title>{`تصاميم هندسية - قسم ${currentCategoryName} | KHF Designs`}</title>
+      <meta name="description" content={`اكتشف أحدث التصاميم الهندسية ومشاريع الـ CNC الفاخرة في قسم ${currentCategoryName}. تفاصيل ومقاسات المنتجات بدقة عالية.`} />
+      <meta name="keywords" content={`تصميم داخلي, هندسة ديكور, CNC, ${currentCategoryName}, أثاث مودرن`} />
+      {/* وسم Open Graph لتثبيت شكل الرابط عند مشاركته على واتساب أو فيسبوك */}
+      <meta property="og:title" content={`قسم ${currentCategoryName} | KHF Designs`} />
+      <meta property="og:image" content={currentCategory?.image || '/logo.png'} />
+    </Helmet>
       <div className="container mx-auto px-6">
         
         {/* رأس الصفحة وزر العودة للمسار الرئيسي */}
