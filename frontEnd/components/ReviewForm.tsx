@@ -79,6 +79,23 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit }) => {
       <button type="submit" className="w-full bg-primary-500 text-white py-2 rounded-md" disabled={loading}>
         {loading ? 'جاري الإرسال...' : 'إرسال'}
       </button>
+      <button
+        type="button"
+        className="w-1/2 mt-2 border bg-red-500 border-gray-300 dark:border-gray-600 text-white py-2 rounded-md"
+        onClick={() => {
+          setText('');
+          setRating(0);
+        }}
+      >
+        مسح
+      </button>
+      <button
+        type="button"
+        className="w-1/2 bg-green-500 mt-2 border border-gray-300 dark:border-gray-600 text-white py-2 rounded-md"
+        onClick={() => navigate('/#evaluation')}
+      >
+        عرض الآراء
+      </button>
     </form>
   );
 };

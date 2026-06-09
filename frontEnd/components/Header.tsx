@@ -72,7 +72,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
           onClick={() => handleScroll('home')}
           className="text-2xl font-bold text-gray-900 dark:text-white cursor-pointer"
         >
-          خالد <span className="text-primary-500 text-sm align-top">DESIGNS</span>
+          KHF <span className="text-primary-500 text-sm ">DESIGNS</span>
         </div>
 
         {/* Desktop Nav */}

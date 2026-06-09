@@ -11,6 +11,7 @@ import { Theme } from './types';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ReviewsAdmin from './components/ReviewsAdmin';
 import AdminDashboard from './components/AdminDashboard';
+import CategoryPage from './components/CategoryPage';
   // التحقق من الأدمن
   const isAdmin = () => {
     const user = localStorage.getItem('user');
@@ -83,6 +84,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/add-review" element={<ReviewForm onSubmit={() => {}} />} />
         <Route path="/all-reviews" element={<ReviewsAdmin />} />
+        <Route path="/portfolio/:categoryId" element={<CategoryPage />} />
         <Route path="/admin" element={isAdmin() ? <AdminDashboard /> : <div className="text-center mt-10 text-red-500">غير مصرح لك بالدخول</div>} />
       </Routes>
     </BrowserRouter>

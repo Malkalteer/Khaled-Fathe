@@ -146,6 +146,9 @@ const AdminDashboard: React.FC = () => {
     setProjects(await api.getProjects());
   };
 
+    const backToHome = () => {
+      window.location.href = '/';
+    }
   if (loading) return <div>جاري التحميل...</div>;
 
   return (
@@ -157,8 +160,8 @@ const AdminDashboard: React.FC = () => {
         <button onClick={() => setActiveTab('users')} className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 ${activeTab === 'users' ? 'bg-primary-600 text-white shadow-lg scale-105 ring-2 ring-primary-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'}`}>المستخدمون</button>
         <button onClick={() => setActiveTab('reviews')} className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 ${activeTab === 'reviews' ? 'bg-primary-600 text-white shadow-lg scale-105 ring-2 ring-primary-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'}`}>التعليقات</button>
         <button onClick={() => setActiveTab('content')} className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 ${activeTab === 'content' ? 'bg-primary-600 text-white shadow-lg scale-105 ring-2 ring-primary-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'}`}>الكاتيجوري والكاردات</button>
+        <button onClick={() =>backToHome()} className="px-6 py-2 rounded-full font-semibold transition-all duration-300 bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white">العودة إلى الصفحة الرئيسية</button>
       </div>
-
       {/* إدارة المستخدمين */}
       {activeTab === 'users' && (
       <div className="bg-gray-900 rounded-xl p-6 shadow-xl border border-gray-800 animate-fadeIn">

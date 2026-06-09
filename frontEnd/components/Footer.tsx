@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
           
           {/* Brand */}
           <div>
-            <h3 className="text-2xl font-bold mb-4">المهندس <span className="text-primary-500">خالد</span></h3>
+            <h3 className="text-2xl font-bold mb-4">KHF  <span className="text-primary-500">DESIGNS</span></h3>
             <p className="text-gray-400 text-sm leading-relaxed mb-6">
               تصاميم استثنائية لحياة عصرية. نسعى دائماً لتحقيق التوازن بين الجمال والوظيفة في كل مساحة نلمسها.
             </p>
@@ -37,9 +37,9 @@ const Footer: React.FC = () => {
             <h4 className="text-lg font-semibold mb-4 text-gray-200">روابط سريعة</h4>
             <ul className="space-y-2 text-gray-400">
               <li><button onClick={() => scrollToSection('home')} className="hover:text-primary-500 transition-colors bg-transparent border-none cursor-pointer">الرئيسية</button></li>
-              <li><button onClick={() => scrollToSection('skills')} className="hover:text-primary-500 transition-colors bg-transparent border-none cursor-pointer">المهارات</button></li>
-              <li><button onClick={() => scrollToSection('portfolio')} className="hover:text-primary-500 transition-colors bg-transparent border-none cursor-pointer">أعمالي</button></li>
-              <li><button onClick={() => scrollToSection('ai-generator')} className="hover:text-primary-500 transition-colors bg-transparent border-none cursor-pointer">تخيل مساحتك</button></li>
+              <li><button onClick={() => scrollToSection('skills')} className="hover:text-primary-500 transition-colors bg-transparent border-none cursor-pointer">من نحن</button></li>
+              <li><button onClick={() => scrollToSection('portfolio')} className="hover:text-primary-500 transition-colors bg-transparent border-none cursor-pointer">معرض الأعمال</button></li>
+              
               <li><button onClick={() => scrollToSection('chat')} className="hover:text-primary-500 transition-colors bg-transparent border-none cursor-pointer">الاستشارات</button></li>
             </ul>
           </div>
@@ -50,11 +50,13 @@ const Footer: React.FC = () => {
             <ul className="space-y-4 text-gray-400">
               <li className="flex items-center gap-3">
                 <Phone size={18} className="text-primary-500" />
-                <span dir="ltr">+20 114 3226557</span>
+                <a href="https://wa.me/+201143226557" target="_blank" className="hover:text-primary-500 transition-colors">
+                  <span dir="ltr">+20 114 3226557</span>
+                </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail size={18} className="text-primary-500" />
-                <a href="https://wa.me/+201143226557" target="_blank"><span>Bob49885@gmail.com</span></a>
+                <span>Bob49885@gmail.com</span>
               </li>
               <li className="flex items-center gap-3">
                 <MapPin size={18} className="text-primary-500" />
@@ -65,7 +67,7 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-500 text-sm">
-           المهندس خالد للتصميم الداخلي. جميع الحقوق محفوظة.&copy; {new Date().getFullYear()}
+           KHF DESIGNS للتصميم الداخلي. جميع الحقوق محفوظة.&copy; {new Date().getFullYear()}
           <p> تصميم وتطوير بواسطة<a href="https://wa.me/963954847418" target='_blank' style={{ color: '#007bff' }}> ALTEER</a> </p>
         </div>
       </div>
