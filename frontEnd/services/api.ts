@@ -17,6 +17,13 @@ export interface Project {
 
 const API_URL = 'https://khaled-fathe.onrender.com';
 
+const normalizeImageUrl = (url: string): string => {
+  if (!url) return url;
+  if (url.startsWith('/uploads/')) return `${API_URL}${url}`;
+  if (url.startsWith('/api/upload/')) return `${API_URL}${url}`;
+  return url;
+};
+
 export const api = {
   uploadImage: async (file: File): Promise<string> => {
     const formData = new FormData();
@@ -27,18 +34,25 @@ export const api = {
     });
     if (!res.ok) throw new Error('فشل رفع الصورة');
     const data = await res.json();
-    return `${API_URL}${data.url}`;
+    return data.url;
   },
   getCategories: async (): Promise<Category[]> => {
     const res = await fetch(`${API_URL}/api/categories`);
     const data = await res.json();
     // إضافة الكل
-    return [{ _id: 'all', name: 'الكل', image: 'https://static.vecteezy.com/system/resources/thumbnails/006/201/197/small_2x/cnc-computer-numerical-control-icon-vector.jpg' }, ...data];
+    const categories = data.map((category: Category) => ({
+      ...category,
+      image: normalizeImageUrl(category.image),
+    }));
+    return [{ _id: 'all', name: 'الكل', image: 'https://static.vecteezy.com/system/resources/thumbnails/006/201/197/small_2x/cnc-computer-numerical-control-icon-vector.jpg' }, ...categories];
   },
   getProjects: async (): Promise<Project[]> => {
     const res = await fetch(`${API_URL}/api/projects`);
     const data = await res.json();
-    return data;
+    return data.map((project: Project) => ({
+      ...project,
+      images: project.images.map(normalizeImageUrl),
+    }));
   },
   addCategory: async (cat: Omit<Category, '_id'>): Promise<Category> => {
     const res = await fetch(`${API_URL}/api/categories`, {
