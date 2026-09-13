@@ -12,11 +12,28 @@ const Register: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    const normalizedName = name.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPhone = phone.trim();
+
+    if (normalizedName.length < 2) {
+      setError('يرجى إدخال اسم مكوّن من حرفين على الأقل');
+      return;
+    }
+    if (normalizedPhone.length < 5) {
+      setError('يرجى إدخال رقم هاتف صحيح');
+      return;
+    }
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/.test(password)) {
+      setError('كلمة المرور يجب أن تحتوي على 8 أحرف، حرف كبير، حرف صغير، ورقم');
+      return;
+    }
+
     fetch('https://khaled-fathe.onrender.com/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ username: name, email, password, phone })
+      body: JSON.stringify({ username: normalizedName, email: normalizedEmail, password, phone: normalizedPhone })
     })
       .then(async res => {
         const data = await res.json();
@@ -73,6 +90,7 @@ const Register: React.FC = () => {
               required
               className="mt-1 w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-800 text-right"
             />
+            <p className="mt-1 text-xs text-gray-500 text-right">8 أحرف على الأقل، مع حرف كبير وحرف صغير ورقم</p>
           </div>
 
           <button className="w-full bg-primary-500 text-white py-2 rounded-md">انشاء حساب</button>
