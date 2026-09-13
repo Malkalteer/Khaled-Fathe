@@ -6,7 +6,8 @@ exports.getAllowedOrigins = () => [
     .map((origin) => origin.trim().replace(/\/$/, ""))
     .filter(Boolean),
   "http://localhost:3000",
-  "http://localhost:5173"
+  "http://localhost:5173",
+  "https://khaled-fathe.vercel.app"
 ];
 
 const getAccessToken = (req) => req.cookies && req.cookies.accessToken;
@@ -36,6 +37,7 @@ exports.verifyRequestOrigin = (req, res, next) => {
   const allowedOrigins = exports.getAllowedOrigins();
   const origin = req.get("origin");
   const referer = req.get("referer");
+  if (!origin && !referer) return next();
   const validOrigin = origin && allowedOrigins.includes(origin);
   const validReferer = referer && allowedOrigins.some((allowedOrigin) => referer.startsWith(`${allowedOrigin}/`));
 
