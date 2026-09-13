@@ -1,5 +1,14 @@
 const jwt = require("jsonwebtoken");
 
+exports.getAllowedOrigins = () => [
+  ...(process.env.FRONTEND_URL || "")
+    .split(",")
+    .map((origin) => origin.trim().replace(/\/$/, ""))
+    .filter(Boolean),
+  "http://localhost:3000",
+  "http://localhost:5173"
+];
+
 const getAccessToken = (req) => req.cookies && req.cookies.accessToken;
 
 exports.requireAuth = (req, res, next) => {
@@ -24,12 +33,13 @@ exports.requireAdmin = (req, res, next) => {
 exports.verifyRequestOrigin = (req, res, next) => {
   if (!["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) return next();
 
-  const allowedOrigin = process.env.FRONTEND_URL;
+  const allowedOrigins = exports.getAllowedOrigins();
   const origin = req.get("origin");
   const referer = req.get("referer");
-  const validReferer = referer && allowedOrigin && referer.startsWith(`${allowedOrigin}/`);
+  const validOrigin = origin && allowedOrigins.includes(origin);
+  const validReferer = referer && allowedOrigins.some((allowedOrigin) => referer.startsWith(`${allowedOrigin}/`));
 
-  if (!allowedOrigin || (origin !== allowedOrigin && !validReferer)) {
+  if (!validOrigin && !validReferer) {
     return res.status(403).json({ message: "طلب غير صالح" });
   }
   next();

@@ -6,7 +6,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const path = require("path");
-const { verifyRequestOrigin } = require("./middleware/auth");
+const { verifyRequestOrigin, getAllowedOrigins } = require("./middleware/auth");
 const seedAdmin = require("./seed");
 
 dotenv.config();
@@ -16,7 +16,13 @@ app.set("trust proxy", 1);
 app.use(helmet());
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
-app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || getAllowedOrigins().includes(origin)) return callback(null, true);
+    return callback(new Error("Origin غير مسموح"));
+  },
+  credentials: true
+}));
 app.use(verifyRequestOrigin);
 
 app.use((req, res, next) => {
