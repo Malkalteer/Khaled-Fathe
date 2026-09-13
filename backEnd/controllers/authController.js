@@ -1,6 +1,5 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
-const speakeasy = require("speakeasy");
 const {
   issueTokens,
   hashRefreshToken,
@@ -45,7 +44,7 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  const { email, password, adminCode } = req.body;
+  const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
     const passwordMatches = user
@@ -53,12 +52,7 @@ exports.login = async (req, res) => {
       : await bcrypt.compare(password, "$2b$12$C6UzMDM.H6dfI/f/IKcEeU0eW7f7s4vSx7H7YQ3x3fGf7nJ4xQf5G");
 
     const locked = user && user.lockoutUntil && user.lockoutUntil > new Date();
-    const adminMfaValid = !user?.isAdmin || (
-      adminCode &&
-      process.env.ADMIN_TOTP_SECRET &&
-      speakeasy.totp.verify({ secret: process.env.ADMIN_TOTP_SECRET, encoding: "base32", token: adminCode, window: 1 })
-    );
-    if (!user || locked || !passwordMatches || !adminMfaValid) {
+    if (!user || locked || !passwordMatches) {
       await recordFailedLogin(user, req);
       return res.status(400).json({ message: invalidCredentials });
     }

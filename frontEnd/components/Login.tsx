@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom';
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [adminCode, setAdminCode] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -15,7 +14,7 @@ const Login: React.FC = () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ email, password, adminCode })
+      body: JSON.stringify({ email, password })
     })
       .then(async res => {
         const data = await res.json();
@@ -43,17 +42,6 @@ const Login: React.FC = () => {
               className="mt-1 w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-800 text-right"
             />
           </div>
-
-          <div>
-            <label className="block text-sm text-gray-700 dark:text-gray-300 text-right">رمز تحقق الأدمن (إن وجد)</label>
-            <input
-              type="password"
-              value={adminCode}
-              onChange={e => setAdminCode(e.target.value)}
-              className="mt-1 w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-800 text-right"
-            />
-          </div>
-
 
           <div>
             <label className="block text-sm text-gray-700 dark:text-gray-300 text-right">كلمة المرور</label>
