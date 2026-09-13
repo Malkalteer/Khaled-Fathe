@@ -19,7 +19,7 @@ import { HelmetProvider } from 'react-helmet-async';
     if (!user) return false;
     try {
       const parsed = JSON.parse(user);
-      return parsed.email === 'khaled@khaled';
+      return parsed.isAdmin === true;
     } catch {
       return false;
     }

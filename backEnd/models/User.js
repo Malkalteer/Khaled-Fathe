@@ -20,7 +20,39 @@ const UserSchema = new mongoose.Schema(
     phone: {
       type: String,
       required: true
-    }
+    },
+    isAdmin: {
+      type: Boolean,
+      default: false
+    },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0
+    },
+    lockoutUntil: {
+      type: Date,
+      default: null
+    },
+    failedLoginLogs: [{
+      at: {
+        type: Date,
+        required: true
+      },
+      ip: {
+        type: String,
+        required: true
+      }
+    }],
+    refreshTokens: [{
+      tokenHash: {
+        type: String,
+        required: true
+      },
+      expiresAt: {
+        type: Date,
+        required: true
+      }
+    }]
   },
   { timestamps: true }
 );

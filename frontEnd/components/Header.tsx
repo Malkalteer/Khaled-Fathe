@@ -30,7 +30,30 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  const handleLogout = () => {
+  useEffect(() => {
+    const refreshSession = async () => {
+      const response = await fetch('https://khaled-fathe.onrender.com/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+          setUser(data.user);
+        }
+      }
+    };
+    refreshSession().catch(() => undefined);
+    const timer = window.setInterval(() => refreshSession().catch(() => undefined), 14 * 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const handleLogout = async () => {
+    await fetch('https://khaled-fathe.onrender.com/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include'
+    });
     localStorage.removeItem('user');
     setUser(null);
     navigate('/');
@@ -57,7 +80,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
     if (!user) return false;
     try {
       const parsed = JSON.parse(user);
-      return parsed.email === 'khaled@khaled';
+      return parsed.isAdmin === true;
     } catch {
       return false;
     }

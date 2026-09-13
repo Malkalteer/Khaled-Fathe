@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [phone, setPhone] = useState('');
+  const [adminCode, setAdminCode] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -14,12 +14,12 @@ const Login: React.FC = () => {
     fetch('https://khaled-fathe.onrender.com/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, phone })
+      credentials: 'include',
+      body: JSON.stringify({ email, password, adminCode })
     })
       .then(async res => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Login failed');
-        // Save user info (from backend) to localStorage
         if (data.user) {
           localStorage.setItem('user', JSON.stringify(data.user));
         }
@@ -40,6 +40,16 @@ const Login: React.FC = () => {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
+              className="mt-1 w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-800 text-right"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-700 dark:text-gray-300 text-right">رمز تحقق الأدمن (إن وجد)</label>
+            <input
+              type="password"
+              value={adminCode}
+              onChange={e => setAdminCode(e.target.value)}
               className="mt-1 w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-800 text-right"
             />
           </div>

@@ -36,11 +36,11 @@ const AdminDashboard: React.FC = () => {
       setCategories(await api.getCategories());
       setProjects(await api.getProjects());
       // جلب المستخدمين من الباك اند
-      const usersRes = await fetch(`${API_URL}/api/auth/users`);
+      const usersRes = await fetch(`${API_URL}/api/auth/users`, { credentials: 'include' });
       const usersData = await usersRes.json();
       setUsers(Array.isArray(usersData) ? usersData : usersData.users || []);
       // جلب التعليقات من الباك اند
-      const reviewsRes = await fetch(`${API_URL}/api/reviews`);
+      const reviewsRes = await fetch(`${API_URL}/api/reviews`, { credentials: 'include' });
       const reviewsData = await reviewsRes.json();
       setReviews(Array.isArray(reviewsData) ? reviewsData : reviewsData.reviews || []);
       setLoading(false);
@@ -50,14 +50,14 @@ const AdminDashboard: React.FC = () => {
   // حذف مستخدم
   const handleDeleteUser = async (id: string) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
-    await fetch(`${API_URL}/api/auth/users/${id}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/api/auth/users/${id}`, { method: 'DELETE', credentials: 'include' });
     setUsers(users => users.filter(u => u._id !== id));
   };
 
   // حذف تعليق
   const handleDeleteReview = async (id: string) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا التعليق؟')) return;
-    await fetch(`${API_URL}/api/reviews/${id}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/api/reviews/${id}`, { method: 'DELETE', credentials: 'include' });
     setReviews(reviews => reviews.filter(r => r._id !== id));
   };
 
@@ -68,7 +68,7 @@ const AdminDashboard: React.FC = () => {
       const url = await api.uploadImage(file);
       setCatImage(url);
     } catch (error) {
-      alert('فشل رفع الصورة');
+      alert(error instanceof Error ? error.message : 'فشل رفع الصورة');
     }
   };
 
@@ -81,7 +81,7 @@ const AdminDashboard: React.FC = () => {
       newImgs[idx] = url;
       setProjImages(newImgs);
     } catch (error) {
-      alert('فشل رفع الصورة');
+      alert(error instanceof Error ? error.message : 'فشل رفع الصورة');
     }
   };
 

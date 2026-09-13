@@ -15,16 +15,13 @@ const Register: React.FC = () => {
     fetch('https://khaled-fathe.onrender.com/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ username: name, email, password, phone })
     })
       .then(async res => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Registration failed');
-        // Save created user info to localStorage
-        if (data.user) {
-          localStorage.setItem('user', JSON.stringify(data.user));
-        }
-        navigate('/');
+        navigate('/login');
       })
       .catch(err => setError(err.message));
   };

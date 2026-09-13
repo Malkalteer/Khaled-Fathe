@@ -27,6 +27,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit }) => {
       const res = await fetch('https://khaled-fathe.onrender.com/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           rating,
           text,

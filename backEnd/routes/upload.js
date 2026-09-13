@@ -4,6 +4,7 @@ const multer = require('multer');
 const mongoose = require('mongoose');
 const { GridFSBucket, ObjectId } = mongoose.mongo;
 const cloudinary = require('cloudinary').v2;
+const { requireAuth, requireAdmin } = require('../middleware/auth');
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -21,9 +22,16 @@ const upload = multer({
 
 const getBucket = () => new GridFSBucket(mongoose.connection.db, { bucketName: 'images' });
 
-router.post('/', upload.single('image'), (req, res) => {
+router.post('/', requireAuth, requireAdmin, upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ message: 'الرجاء اختيار صورة' });
+    }
+
+    const missingConfig = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET']
+        .filter(name => !process.env[name]);
+    if (missingConfig.length > 0) {
+        console.error(`Cloudinary configuration is missing: ${missingConfig.join(', ')}`);
+        return res.status(500).json({ message: 'إعدادات تخزين الصور غير مكتملة على الخادم' });
     }
 
     const uploadStream = cloudinary.uploader.upload_stream(
@@ -36,7 +44,7 @@ router.post('/', upload.single('image'), (req, res) => {
         (error, result) => {
             if (error) {
                 console.error('Cloudinary upload error:', error);
-                return res.status(500).json({ message: 'فشل حفظ الصورة' });
+                return res.status(502).json({ message: 'رفض Cloudinary رفع الصورة' });
             }
 
             res.status(201).json({ url: result.secure_url });

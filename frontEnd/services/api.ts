@@ -30,10 +30,12 @@ export const api = {
     formData.append('image', file);
     const res = await fetch(`${API_URL}/api/upload`, {
       method: 'POST',
+      credentials: 'include',
       body: formData,
     });
-    if (!res.ok) throw new Error('فشل رفع الصورة');
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || 'فشل رفع الصورة');
+    if (!data.url) throw new Error('لم يُرجع الخادم رابط الصورة');
     return data.url;
   },
   getCategories: async (): Promise<Category[]> => {
@@ -57,6 +59,7 @@ export const api = {
   addCategory: async (cat: Omit<Category, '_id'>): Promise<Category> => {
     const res = await fetch(`${API_URL}/api/categories`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cat),
     });
@@ -65,6 +68,7 @@ export const api = {
   addProject: async (proj: Omit<Project, '_id'>): Promise<Project> => {
     const res = await fetch(`${API_URL}/api/projects`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...proj,
@@ -75,14 +79,15 @@ export const api = {
     return await res.json();
   },
   deleteCategory: async (id: string) => {
-    await fetch(`${API_URL}/api/categories/${id}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/api/categories/${id}`, { method: 'DELETE', credentials: 'include' });
   },
   deleteProject: async (id: string) => {
-    await fetch(`${API_URL}/api/projects/${id}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/api/projects/${id}`, { method: 'DELETE', credentials: 'include' });
   },
   updateCategory: async (cat: Category) => {
     await fetch(`${API_URL}/api/categories/${cat._id}`, {
       method: 'PUT',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: cat.name, image: cat.image }),
     });
@@ -90,6 +95,7 @@ export const api = {
   updateProject: async (proj: Project) => {
     await fetch(`${API_URL}/api/projects/${proj._id}`, {
       method: 'PUT',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: proj.title,
