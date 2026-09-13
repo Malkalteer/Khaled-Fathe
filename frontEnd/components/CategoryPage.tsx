@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { api, Category, Project } from '../services/api';
 import { Helmet } from 'react-helmet-async';
 
@@ -13,41 +13,70 @@ type ProductDetailsModalProps = {
 
 const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ project, categories, onClose }) => {
   const [mainImgIdx, setMainImgIdx] = React.useState(0);
+  const [isPaused, setIsPaused] = React.useState(false);
   const images = Array.isArray(project.images) && project.images.length > 0 ? project.images : [];
 
+  React.useEffect(() => {
+    setMainImgIdx(0);
+  }, [project._id]);
+
+  React.useEffect(() => {
+    if (images.length < 2) return;
+    const timer = window.setInterval(() => {
+      if (isPaused) return;
+      setMainImgIdx((current) => (current + 1) % images.length);
+    }, 4500);
+    return () => window.clearInterval(timer);
+  }, [images.length, isPaused, project._id]);
+
+  const showPreviousImage = () => {
+    setMainImgIdx((current) => (current - 1 + images.length) % images.length);
+  };
+
+  const showNextImage = () => {
+    setMainImgIdx((current) => (current + 1) % images.length);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 w-screen h-screen bg-white dark:bg-gray-900 overflow-hidden flex" style={{ direction: 'rtl' }}>
-      <button onClick={onClose} className="absolute top-4 right-4 z-10 w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-lg">
-        <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+    <div className="fixed inset-0 z-50 w-screen h-screen bg-black/70 backdrop-blur-sm overflow-hidden flex items-center justify-center p-0 md:p-6 animate-fade-in" style={{ direction: 'rtl' }}>
+      <div className="relative flex flex-col md:flex-row w-full h-full md:max-w-7xl md:h-[min(860px,92vh)] overflow-hidden bg-white dark:bg-gray-900 md:rounded-3xl shadow-2xl animate-modal-in">
+        <button onClick={onClose} aria-label="إغلاق التفاصيل" className="absolute top-4 right-4 z-20 w-11 h-11 bg-white/90 dark:bg-gray-800/90 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+          <X className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+        </button>
 
-      <div className="hidden md:flex md:flex-shrink-0 md:w-32 md:lg:w-52 md:border-l dark:md:border-gray-700 dark:md:bg-gray-800 md:overflow-y-auto p-4">
-        {images.map((img, idx) => (
-          <button key={idx} onClick={() => setMainImgIdx(idx)} className={`mb-3 rounded-lg overflow-hidden h-20 w-full ${mainImgIdx === idx ? 'ring-3 ring-primary-600' : 'opacity-60'}`}>
-            <img src={img} alt="" className="w-full h-full object-cover" />
-          </button>
-        ))}
-      </div>
+        <div className="hidden md:flex md:flex-shrink-0 md:w-32 lg:w-44 border-l dark:border-gray-700 dark:bg-gray-800 overflow-y-auto p-4 flex-col gap-3">
+          {images.map((img, idx) => (
+            <button key={img + idx} onClick={() => setMainImgIdx(idx)} aria-label={`عرض الصورة ${idx + 1}`} className={`rounded-xl overflow-hidden h-20 w-full transition-all duration-300 ${mainImgIdx === idx ? 'ring-4 ring-primary-500 scale-105 opacity-100' : 'opacity-55 hover:opacity-100'}`}>
+              <img src={img} alt="" className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
 
-      <div className="flex-1 flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-800">
-        <img src={images[mainImgIdx]} alt={project.title} className="max-w-full max-h-full object-contain" />
-      </div>
+        <div className="relative flex-1 min-h-[52vh] md:min-h-0 flex items-center justify-center p-4 md:p-10 bg-gray-50 dark:bg-gray-800" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
+          {images.length > 0 ? <img key={`${project._id}-${mainImgIdx}`} src={images[mainImgIdx]} alt={project.title} className="max-w-full max-h-full object-contain animate-image-in" /> : <span className="text-gray-400">لا توجد صورة</span>}
+          {images.length > 1 && <>
+            <button onClick={showPreviousImage} aria-label="الصورة السابقة" className="absolute right-4 md:right-8 w-11 h-11 rounded-full bg-black/35 text-white flex items-center justify-center hover:bg-primary-600 hover:scale-110 transition-all"><ChevronRight /></button>
+            <button onClick={showNextImage} aria-label="الصورة التالية" className="absolute left-4 md:left-8 w-11 h-11 rounded-full bg-black/35 text-white flex items-center justify-center hover:bg-primary-600 hover:scale-110 transition-all"><ChevronLeft /></button>
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 px-3 py-2 rounded-full bg-black/35 backdrop-blur-sm">
+              {images.map((img, idx) => <button key={img + idx} onClick={() => setMainImgIdx(idx)} aria-label={`الانتقال إلى الصورة ${idx + 1}`} className={`h-2 rounded-full transition-all ${mainImgIdx === idx ? 'w-7 bg-white' : 'w-2 bg-white/50 hover:bg-white'}`} />)}
+            </div>
+          </>}
+        </div>
 
-      <div className="w-80 md:lg:w-96 flex flex-col bg-white dark:bg-gray-900 p-6 md:p-8 overflow-y-auto">
-        <div className="flex-1">
+        <div className="w-full md:w-80 lg:w-96 flex flex-col bg-white dark:bg-gray-900 p-6 md:p-8 overflow-y-auto">
+          <div className="flex-1">
           <div className="inline-block bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-xs font-semibold mb-3">
             {categories.find(c => c._id === (typeof project.category === 'string' ? project.category : project.category._id))?.name}
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">{project.title}</h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{project.description}</p>
         </div>
-        <div className="flex flex-col gap-2 mt-6">
+          <div className="flex flex-col gap-2 mt-6">
           <a href={`https://wa.me/201143226557?text=أرغب في معرفة تفاصيل المنتج: ${project.title}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-green-500 text-white font-bold py-3 px-4 rounded-lg text-sm">
             <span>تواصل عبر واتساب</span>
           </a>
           <button onClick={onClose} className="bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white font-bold py-3 px-4 rounded-lg text-sm">رجوع</button>
+          </div>
         </div>
       </div>
     </div>
@@ -138,10 +167,11 @@ const currentCategoryName = categoryId === 'all'
           <div className="text-center text-gray-400 py-20 text-lg">لا توجد مشاريع مضافة في هذا القسم حتى الآن.</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProjects.map((project) => (
+            {filteredProjects.map((project, index) => (
               <div
                 key={project._id}
-                className="bg-white dark:bg-dark-card rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group"
+                className="bg-white dark:bg-dark-card rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group animate-card-in"
+                style={{ animationDelay: `${Math.min(index * 80, 480)}ms` }}
               >
                 <div className="relative overflow-hidden aspect-[4/3] cursor-pointer">
                   <img

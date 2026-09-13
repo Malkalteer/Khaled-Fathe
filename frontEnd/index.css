@@ -22,3 +22,28 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #64748b;
 }
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes image-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in { animation: fade-in 280ms ease-out both; }
+.animate-modal-in { animation: modal-in 350ms cubic-bezier(.22, 1, .36, 1) both; }
+.animate-image-in { animation: image-in 450ms ease-out both; }
+.animate-card-in { animation: card-in 500ms ease-out both; }
