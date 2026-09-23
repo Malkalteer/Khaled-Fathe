@@ -40,6 +40,52 @@ exports.getProductStats = async (req, res) => {
   }
 };
 
+exports.getUserFavorites = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'غير مصرح' });
+    }
+
+    const userId = req.user.sub || req.user.id;
+    const favorites = await ProductInteraction.find({ user: userId, favorite: true })
+      .populate({
+        path: 'product',
+        populate: { path: 'category', select: '_id name' },
+      });
+
+    const formatted = await Promise.all(
+      favorites
+        .filter((item) => item.product)
+        .map(async (item) => {
+          const project = item.product.toObject ? item.product.toObject() : item.product;
+          const productInteractions = await ProductInteraction.find({ product: project._id });
+          const ratings = productInteractions
+            .filter((entry) => entry.rating != null)
+            .map((entry) => entry.rating);
+          const averageRating = ratings.length
+            ? ratings.reduce((sum, value) => sum + value, 0) / ratings.length
+            : 0;
+
+          return {
+            _id: project._id,
+            title: project.title,
+            description: project.description || '',
+            images: project.images || [],
+            category: project.category || null,
+            averageRating: Number(averageRating.toFixed(2)),
+            votes: ratings.length,
+            favorites: productInteractions.filter((entry) => entry.favorite).length,
+          };
+        })
+    );
+
+    res.json(formatted);
+  } catch (error) {
+    console.error('Get user favorites error:', error.message || error);
+    res.status(500).json({ message: 'تعذّر تحميل المفضلة' });
+  }
+};
+
 exports.saveInteraction = async (req, res) => {
   try {
     if (!req.user) {

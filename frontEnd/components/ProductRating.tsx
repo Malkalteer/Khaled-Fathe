@@ -63,9 +63,11 @@ export const ProductRating: React.FC<{ productId: string; compact?: boolean }> =
       return;
     }
 
+    const nextFavorite = !userFavorite;
     setLoading(true);
+
     try {
-      await saveProductInteraction(productId, { favorite: !userFavorite });
+      await saveProductInteraction(productId, { favorite: nextFavorite });
       await loadStats();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'تعذّر تحديث المفضلة';

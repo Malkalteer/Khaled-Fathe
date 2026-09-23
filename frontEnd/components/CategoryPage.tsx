@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight, ShoppingCart, X, Heart } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, ShoppingCart, X } from 'lucide-react';
 import { api, Category, Project } from '../services/api';
 import { Helmet } from 'react-helmet-async';
 import { useCart } from '../context/CartContext';
 import { ProductRating } from './ProductRating';
-import { getProductInteractionStats, saveProductInteraction } from '../services/productInteractions';
+import { getProductInteractionStats } from '../services/productInteractions';
 
 // الحفاظ على كامبوننت الـ Modal الخاص بك داخل الصفحة الجديدة ليعمل بكفاءة عند اختيار أي منتج
 type ProductDetailsModalProps = {
@@ -180,26 +180,6 @@ const CategoryPage: React.FC = () => {
     setIsCartOpen(true);
   };
 
-  const handleFavoriteToggle = async (project: Project) => {
-    const user = localStorage.getItem('user');
-    if (!user) {
-      alert('يرجى تسجيل الدخول أولاً لإضافة المنتج إلى المفضلة');
-      return;
-    }
-
-    try {
-      const nextFavorite = !project.userFavorite;
-      await saveProductInteraction(project._id, { favorite: nextFavorite });
-      const updatedStats = await getProductInteractionStats(project._id);
-      setProjects((prev) => prev.map((item) => item._id === project._id ? {
-        ...item,
-        userFavorite: Boolean(updatedStats.userFavorite),
-        favorites: updatedStats.favorites || 0,
-      } : item));
-    } catch (error) {
-      console.error('Favorite toggle error:', error);
-    }
-  };
 
  // تصفية المنتجات مع دعم خيار "الكل"
 const filteredProjects = projects.filter(project => {
@@ -286,18 +266,6 @@ const currentCategoryName = categoryId === 'all'
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{project.title}</h3>
-                    <button
-                      type="button"
-                      onClick={() => handleFavoriteToggle(project)}
-                      aria-label={project.userFavorite ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}
-                      className={`rounded-full border p-1.5 transition ${
-                        project.userFavorite
-                          ? 'border-red-200 bg-red-50 text-red-500'
-                          : 'border-gray-200 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                      }`}
-                    >
-                      <Heart className={`h-4 w-4 ${project.userFavorite ? 'fill-current' : ''}`} />
-                    </button>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{project.description}</p>
                   <ProductRating productId={project._id} compact />
