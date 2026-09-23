@@ -45,6 +45,11 @@ export const ProductRating: React.FC<{ productId: string; compact?: boolean }> =
     try {
       await saveProductInteraction(productId, { rating: nextValue });
       await loadStats();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'تعذّر حفظ التقييم';
+      alert(message.includes('غير مصرح') || message.includes('انتهت الجلسة')
+        ? 'يرجى تسجيل الدخول أولاً لتقييم المنتج'
+        : message);
     } finally {
       setLoading(false);
       setHoverValue(0);
@@ -62,6 +67,11 @@ export const ProductRating: React.FC<{ productId: string; compact?: boolean }> =
     try {
       await saveProductInteraction(productId, { favorite: !userFavorite });
       await loadStats();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'تعذّر تحديث المفضلة';
+      alert(message.includes('غير مصرح') || message.includes('انتهت الجلسة')
+        ? 'يرجى تسجيل الدخول أولاً لإضافة المنتج إلى المفضلة'
+        : message);
     } finally {
       setLoading(false);
     }
