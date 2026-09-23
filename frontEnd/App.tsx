@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
+
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Skills from './components/Skills';
@@ -7,26 +10,29 @@ import ImageGenerator from './components/ImageGenerator';
 import ChatAssistant from './components/ChatAssistant';
 import Footer from './components/Footer';
 import Evaluation from './components/Evaluation';
-import { Theme } from './types';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ReviewsAdmin from './components/ReviewsAdmin';
 import AdminDashboard from './components/AdminDashboard';
 import CategoryPage from './components/CategoryPage';
-import { HelmetProvider } from 'react-helmet-async';
-  // التحقق من الأدمن
-  const isAdmin = () => {
-    const user = localStorage.getItem('user');
-    if (!user) return false;
-    try {
-      const parsed = JSON.parse(user);
-      return parsed.isAdmin === true;
-    } catch {
-      return false;
-    }
-  };
 import ReviewForm from './components/ReviewForm';
 import Login from './components/Login';
 import Register from './components/Register';
+import FavoritesPage from './components/FavoritesPage';
+
+import { Theme } from './types';
+import { CartProvider } from './context/CartContext';
+import { CartDrawer } from './components/CartDrawer';
+
+// التحقق من الأدمن
+const isAdmin = () => {
+  const user = localStorage.getItem('user');
+  if (!user) return false;
+  try {
+    const parsed = JSON.parse(user);
+    return parsed.isAdmin === true;
+  } catch {
+    return false;
+  }
+};
 
 function App() {
   // Default to Dark Mode
@@ -79,17 +85,31 @@ function App() {
 
   return (
     <HelmetProvider>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/add-review" element={<ReviewForm onSubmit={() => {}} />} />
-        <Route path="/all-reviews" element={<ReviewsAdmin />} />
-        <Route path="/portfolio/:categoryId" element={<CategoryPage />} />
-        <Route path="/admin" element={isAdmin() ? <AdminDashboard /> : <div className="text-center mt-10 text-red-500">غير مصرح لك بالدخول</div>} />
-      </Routes>
-    </BrowserRouter>
+      <CartProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/add-review" element={<ReviewForm onSubmit={() => {}} />} />
+            <Route path="/all-reviews" element={<ReviewsAdmin />} />
+            <Route path="/favorites" element={<FavoritesPage />} />
+            <Route path="/portfolio/:categoryId" element={<CategoryPage />} />
+            <Route
+              path="/admin"
+              element={
+                isAdmin() ? (
+                  <AdminDashboard />
+                ) : (
+                  <div className="text-center mt-10 text-red-500">غير مصرح لك بالدخول</div>
+                )
+              }
+            />
+          </Routes>
+          {/* دروج السلة متاح عبر كافة مسارات الموقع */}
+          <CartDrawer />
+        </BrowserRouter>
+      </CartProvider>
     </HelmetProvider>
   );
 }

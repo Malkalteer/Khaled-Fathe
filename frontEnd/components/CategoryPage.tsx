@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, ShoppingCart, X, Heart } from 'lucide-react';
 import { api, Category, Project } from '../services/api';
 import { Helmet } from 'react-helmet-async';
+import { useCart } from '../context/CartContext';
+import { ProductRating } from './ProductRating';
+import { getProductInteractionStats, saveProductInteraction } from '../services/productInteractions';
 
 // الحفاظ على كامبوننت الـ Modal الخاص بك داخل الصفحة الجديدة ليعمل بكفاءة عند اختيار أي منتج
 type ProductDetailsModalProps = {
@@ -14,6 +17,7 @@ type ProductDetailsModalProps = {
 const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ project, categories, onClose }) => {
   const [mainImgIdx, setMainImgIdx] = React.useState(0);
   const [isPaused, setIsPaused] = React.useState(false);
+  const { addToCart, setIsCartOpen } = useCart();
   const images = Array.isArray(project.images) && project.images.length > 0 ? project.images : [];
 
   React.useEffect(() => {
@@ -35,6 +39,23 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ project, cate
 
   const showNextImage = () => {
     setMainImgIdx((current) => (current + 1) % images.length);
+  };
+
+  const handleAddToCart = () => {
+    const categoryName = categories.find(c => c._id === (typeof project.category === 'string' ? project.category : project.category._id))?.name || 'تصميم مخصص';
+    const image = images[0] || '';
+    addToCart({
+      ...project,
+      _id: project._id,
+      id: project._id,
+      title: project.title,
+      name: project.title,
+      image,
+      imgUrl: image,
+      img: image,
+      category: categoryName,
+    });
+    setIsCartOpen(true);
   };
 
   return (
@@ -70,9 +91,14 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ project, cate
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">{project.title}</h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{project.description}</p>
+          <ProductRating productId={project._id} />
         </div>
           <div className="flex flex-col gap-2 mt-6">
-          <a href={`https://wa.me/201143226557?text=أرغب في معرفة تفاصيل المنتج: ${project.title}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-green-500 text-white font-bold py-3 px-4 rounded-lg text-sm">
+          <button onClick={handleAddToCart} className="flex items-center justify-center gap-2 bg-primary-600 text-white font-bold py-3 px-4 rounded-lg text-sm">
+            <ShoppingCart size={16} />
+            <span>أضف إلى السلة</span>
+          </button>
+          <a href={`https://wa.me/201143226557?text=${encodeURIComponent(`أرغب في الاستفسار عن المنتج: ${project.title} - ${project.description}`)}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-green-500 text-white font-bold py-3 px-4 rounded-lg text-sm">
             <span>تواصل عبر واتساب</span>
           </a>
           <button onClick={onClose} className="bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white font-bold py-3 px-4 rounded-lg text-sm">رجوع</button>
@@ -87,6 +113,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ project, cate
 const CategoryPage: React.FC = () => {
   const { categoryId } = useParams<{ categoryId: string }>(); // جلب المعرّف الحركي من الرابط
   const navigate = useNavigate();
+  const { addToCart, setIsCartOpen } = useCart();
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -98,8 +125,34 @@ const CategoryPage: React.FC = () => {
       setLoading(true);
       const cats = await api.getCategories();
       const projs = await api.getProjects();
+
+      const withStats = await Promise.all(
+        projs.map(async (project) => {
+          try {
+            const stats = await getProductInteractionStats(project._id);
+            return {
+              ...project,
+              averageRating: stats.averageRating || 0,
+              votes: stats.votes || 0,
+              favorites: stats.favorites || 0,
+              userRating: stats.userRating ?? null,
+              userFavorite: Boolean(stats.userFavorite),
+            };
+          } catch {
+            return {
+              ...project,
+              averageRating: 0,
+              votes: 0,
+              favorites: 0,
+              userRating: null,
+              userFavorite: false,
+            };
+          }
+        })
+      );
+
       setCategories(cats);
-      setProjects(projs);
+      setProjects(withStats);
       setLoading(false);
     };
     fetchData();
@@ -108,17 +161,59 @@ const CategoryPage: React.FC = () => {
 
   const currentCategory = categories.find(c => c._id === categoryId);
 
+  const handleAddToCart = (project: Project) => {
+    const categoryName = categories.find(c => c._id === (typeof project.category === 'string' ? project.category : project.category._id))?.name || currentCategory?.name || 'تصميم مخصص';
+    const image = Array.isArray(project.images) && project.images.length > 0 ? project.images[0] : '';
+    addToCart({
+      ...project,
+      _id: project._id,
+      id: project._id,
+      title: project.title,
+      name: project.title,
+      image,
+      imgUrl: image,
+      img: image,
+      category: categoryName,
+      averageRating: project.averageRating,
+      userFavorite: project.userFavorite,
+    });
+    setIsCartOpen(true);
+  };
+
+  const handleFavoriteToggle = async (project: Project) => {
+    const user = localStorage.getItem('user');
+    if (!user) {
+      alert('يرجى تسجيل الدخول أولاً لإضافة المنتج إلى المفضلة');
+      return;
+    }
+
+    try {
+      const nextFavorite = !project.userFavorite;
+      await saveProductInteraction(project._id, { favorite: nextFavorite });
+      const updatedStats = await getProductInteractionStats(project._id);
+      setProjects((prev) => prev.map((item) => item._id === project._id ? {
+        ...item,
+        userFavorite: Boolean(updatedStats.userFavorite),
+        favorites: updatedStats.favorites || 0,
+      } : item));
+    } catch (error) {
+      console.error('Favorite toggle error:', error);
+    }
+  };
+
  // تصفية المنتجات مع دعم خيار "الكل"
 const filteredProjects = projects.filter(project => {
-  // 1. إذا كان المعرّف القادم من الرابط هو 'all'، اعرض المنتج مباشرة دون تصفية
   if (categoryId === 'all') return true;
 
-  // 2. خلاف ذلك، قم بالتصفية الطبيعية بناءً على الـ ID الخاص بالكاتيجوري
   if (!project.category) return false;
   if (typeof project.category === 'object' && project.category._id) {
     return project.category._id === categoryId;
   }
   return project.category === categoryId;
+}).sort((a, b) => {
+  const aScore = Number(a.averageRating ?? 0);
+  const bScore = Number(b.averageRating ?? 0);
+  return bScore - aScore;
 });
 
 // 2. قم بإضافة هذا السطر الجديد هنا لحل المشكلة وتوليد الاسم بشكل صحيح:
@@ -189,8 +284,30 @@ const currentCategoryName = categoryId === 'all'
                   </div>
                 </div>
                 <div className="p-5">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{project.title}</h3>
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{project.title}</h3>
+                    <button
+                      type="button"
+                      onClick={() => handleFavoriteToggle(project)}
+                      aria-label={project.userFavorite ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}
+                      className={`rounded-full border p-1.5 transition ${
+                        project.userFavorite
+                          ? 'border-red-200 bg-red-50 text-red-500'
+                          : 'border-gray-200 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                      }`}
+                    >
+                      <Heart className={`h-4 w-4 ${project.userFavorite ? 'fill-current' : ''}`} />
+                    </button>
+                  </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{project.description}</p>
+                  <ProductRating productId={project._id} compact />
+                  <button
+                    onClick={() => handleAddToCart(project)}
+                    className="mt-4 flex w-full items-center justify-center gap-2 bg-primary-600 text-white font-semibold py-2.5 rounded-xl hover:bg-primary-700 transition"
+                  >
+                    <ShoppingCart size={16} />
+                    أضف للسلة
+                  </button>
                 </div>
               </div>
             ))}

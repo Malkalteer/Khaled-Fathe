@@ -13,6 +13,11 @@ export interface Project {
   category: string | Category; // category id or populated
   images: string[];
   description: string;
+  averageRating?: number;
+  votes?: number;
+  favorites?: number;
+  userRating?: number | null;
+  userFavorite?: boolean;
 }
 
 const API_URL = 'https://khaled-fathe.onrender.com';

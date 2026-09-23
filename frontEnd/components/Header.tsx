@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Moon, Sun, Menu, X } from 'lucide-react';
+import { Moon, Sun, Menu, X, ShoppingCart, Heart } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Theme } from '../types';
+import { useCart } from '../context/CartContext';
 
 interface HeaderProps {
   theme: Theme;
@@ -12,6 +13,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [user, setUser] = useState<any | null>(null);
   const navigate = useNavigate();
+  const { cart, setIsCartOpen } = useCart();
 
   useEffect(() => {
     try {
@@ -123,6 +125,29 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
             aria-label="Toggle Theme"
           >
             {theme === Theme.DARK ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+
+          <Link
+            to="/favorites"
+            className="flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 py-2 text-red-500 transition hover:bg-red-100 dark:border-red-900 dark:bg-red-950/30 dark:text-red-400"
+            aria-label="عرض المفضلة"
+          >
+            <Heart size={18} fill="currentColor" />
+            <span className="text-xs font-bold">المفضلة</span>
+          </Link>
+
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="relative flex items-center gap-2 rounded-full bg-primary-500 px-3 py-2 text-white shadow-sm hover:bg-primary-600 transition-colors"
+            aria-label="فتح سلة الطلبات"
+          >
+            <ShoppingCart size={18} />
+            <span className="text-xs font-bold">السلة</span>
+            {cart.length > 0 && (
+              <span className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                {cart.length}
+              </span>
+            )}
           </button>
 
           {user ? (
