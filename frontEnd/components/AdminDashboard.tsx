@@ -24,6 +24,10 @@ const AdminDashboard: React.FC = () => {
   const [projImages, setProjImages] = useState<string[]>(['']);
   const [projCategory, setProjCategory] = useState('');
   const [projDescription, setProjDescription] = useState('');
+  const [projPrice, setProjPrice] = useState<number>(0);
+  const [projMaterial, setProjMaterial] = useState('');
+  const [projDimensions, setProjDimensions] = useState('');
+  const [projDetails, setProjDetails] = useState('');
   const [projEditId, setProjEditId] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -116,16 +120,36 @@ const AdminDashboard: React.FC = () => {
     e.preventDefault();
     const filteredImages = projImages.filter(img => img.trim() !== '');
     if (!projTitle || filteredImages.length === 0 || !projCategory) return;
+    const detailsList = projDetails
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    const payload: Omit<Project, '_id'> = {
+      title: projTitle,
+      images: filteredImages,
+      category: projCategory,
+      description: projDescription,
+      price: projPrice,
+      material: projMaterial,
+      dimensions: projDimensions,
+      details: detailsList,
+    };
+
     if (projEditId) {
-      await api.updateProject({ _id: projEditId, title: projTitle, images: filteredImages, category: projCategory, description: projDescription });
+      await api.updateProject({ _id: projEditId, ...payload });
     } else {
-      await api.addProject({ title: projTitle, images: filteredImages, category: projCategory, description: projDescription });
+      await api.addProject(payload);
     }
     setProjects(await api.getProjects());
     setProjTitle('');
     setProjImages(['']);
     setProjCategory('');
     setProjDescription('');
+    setProjPrice(0);
+    setProjMaterial('');
+    setProjDimensions('');
+    setProjDetails('');
     setProjEditId(null);
   };
 
@@ -139,6 +163,10 @@ const AdminDashboard: React.FC = () => {
     }
     setProjCategory(typeof proj.category === 'string' ? proj.category : (proj.category as Category)._id);
     setProjDescription(proj.description);
+    setProjPrice(Number(proj.price) || 0);
+    setProjMaterial(proj.material || '');
+    setProjDimensions(proj.dimensions || '');
+    setProjDetails((proj.details || []).join('\n'));
   };
 
   const handleDeleteProject = async (id: string) => {
@@ -286,10 +314,36 @@ const AdminDashboard: React.FC = () => {
                 <option className='text-black bg-white' key={cat._id} value={cat._id}>{cat.name}</option>
               ))}
             </select>
+            <input
+              type="number"
+              min="0"
+              value={projPrice}
+              onChange={e => setProjPrice(Number(e.target.value) || 0)}
+              placeholder="السعر"
+              className="border p-2 rounded text-black"
+            />
+            <input
+              value={projMaterial}
+              onChange={e => setProjMaterial(e.target.value)}
+              placeholder="المادة المستخدمة (مثل MDF أو Plywood)"
+              className="border p-2 rounded text-black"
+            />
+            <textarea
+              value={projDimensions}
+              onChange={e => setProjDimensions(e.target.value)}
+              placeholder="الأبعاد (كل سطر كقيمة مستقلة مثل: Width: 95 CM)"
+              className="border p-2 rounded text-black min-h-[90px]"
+            />
+            <textarea
+              value={projDetails}
+              onChange={e => setProjDetails(e.target.value)}
+              placeholder="معلومات إضافية - كل سطر سطر مستقل (Show More)"
+              className="border p-2 rounded text-black min-h-[90px]"
+            />
             <textarea value={projDescription} onChange={e => setProjDescription(e.target.value)} placeholder="وصف إضافي" className="border p-2 rounded text-black" />
             <div className="flex gap-4 mt-2">
               <button type="submit" className="flex-1 bg-primary-600 hover:bg-primary-500 transition-colors text-white rounded-lg py-2 font-bold shadow-lg">{projEditId ? 'حفظ التعديلات' : 'إضافة العمل'}</button>
-              {projEditId && <button type="button" onClick={() => { setProjEditId(null); setProjTitle(''); setProjImages(['']); setProjCategory(''); setProjDescription(''); }} className="bg-gray-600 hover:bg-gray-500 transition-colors text-white rounded-lg px-4 font-bold shadow-lg">إلغاء</button>}
+              {projEditId && <button type="button" onClick={() => { setProjEditId(null); setProjTitle(''); setProjImages(['']); setProjCategory(''); setProjDescription(''); setProjPrice(0); setProjMaterial(''); setProjDimensions(''); setProjDetails(''); }} className="bg-gray-600 hover:bg-gray-500 transition-colors text-white rounded-lg px-4 font-bold shadow-lg">إلغاء</button>}
             </div>
           </form>
 

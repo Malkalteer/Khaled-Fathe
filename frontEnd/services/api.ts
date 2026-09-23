@@ -13,6 +13,10 @@ export interface Project {
   category: string | Category; // category id or populated
   images: string[];
   description: string;
+  price?: number;
+  material?: string;
+  dimensions?: string;
+  details?: string[];
   averageRating?: number;
   votes?: number;
   favorites?: number;
@@ -78,6 +82,10 @@ export const api = {
       body: JSON.stringify({
         ...proj,
         images: proj.images,
+        price: Number(proj.price) || 0,
+        material: proj.material || '',
+        dimensions: proj.dimensions || '',
+        details: proj.details || [],
         category: typeof proj.category === 'string' ? proj.category : (proj.category as Category)._id,
       }),
     });
@@ -107,6 +115,10 @@ export const api = {
         images: proj.images,
         category: typeof proj.category === 'string' ? proj.category : (proj.category as Category)._id,
         description: proj.description,
+        price: Number(proj.price) || 0,
+        material: proj.material || '',
+        dimensions: proj.dimensions || '',
+        details: proj.details || [],
       }),
     });
   },

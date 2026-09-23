@@ -17,8 +17,11 @@ type ProductDetailsModalProps = {
 const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ project, categories, onClose }) => {
   const [mainImgIdx, setMainImgIdx] = React.useState(0);
   const [isPaused, setIsPaused] = React.useState(false);
+  const [showMore, setShowMore] = React.useState(false);
   const { addToCart, setIsCartOpen } = useCart();
   const images = Array.isArray(project.images) && project.images.length > 0 ? project.images : [];
+  const extraDetails = Array.isArray(project.details) ? project.details : [];
+  const dimensionLines = project.dimensions ? project.dimensions.split('\n').map(line => line.trim()).filter(Boolean) : [];
 
   React.useEffect(() => {
     setMainImgIdx(0);
@@ -90,6 +93,41 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ project, cate
             {categories.find(c => c._id === (typeof project.category === 'string' ? project.category : project.category._id))?.name}
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">{project.title}</h1>
+          <div className="text-3xl font-black text-gray-900 dark:text-white mb-4">{Number(project.price || 0).toFixed(2)} $</div>
+
+          {project.material && (
+            <div className="mb-4">
+              <div className="text-sm text-gray-500 dark:text-gray-400">Material used :</div>
+              <div className="text-lg font-semibold text-gray-900 dark:text-white">{project.material}</div>
+            </div>
+          )}
+
+          {dimensionLines.length > 0 && (
+            <div className="mb-4">
+              <div className="text-sm text-gray-500 dark:text-gray-400">Dimensions :</div>
+              <div className="space-y-1 mt-2 text-gray-900 dark:text-white">
+                {(showMore ? dimensionLines : dimensionLines.slice(0, 2)).map((line, idx) => (
+                  <div key={idx} className="font-semibold">{line}</div>
+                ))}
+                {dimensionLines.length > 2 && (
+                  <button type="button" onClick={() => setShowMore((prev) => !prev)} className="mt-2 text-sm font-bold text-primary-600 hover:text-primary-500">
+                    {showMore ? 'Show Less' : 'Show More'}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {extraDetails.length > 0 && (
+            <div className="mb-4">
+              <div className="space-y-1 text-gray-800 dark:text-gray-200">
+                {(showMore ? extraDetails : extraDetails.slice(0, 2)).map((item, idx) => (
+                  <div key={idx} className="text-sm">• {item}</div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{project.description}</p>
           <ProductRating productId={project._id} />
         </div>

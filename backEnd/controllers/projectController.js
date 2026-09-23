@@ -12,8 +12,17 @@ exports.getProjects = async (req, res) => {
 
 exports.createProject = async (req, res) => {
   try {
-    const { title, images, category, description } = req.body;
-    const proj = new Project({ title, images, category, description });
+    const { title, images, category, description, price, material, dimensions, details } = req.body;
+    const proj = new Project({
+      title,
+      images,
+      category,
+      description,
+      price: Number(price) || 0,
+      material: material || '',
+      dimensions: dimensions || '',
+      details: Array.isArray(details) ? details : []
+    });
     await proj.save();
     res.status(201).json(proj);
   } catch (error) {
@@ -25,8 +34,17 @@ exports.createProject = async (req, res) => {
 exports.updateProject = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, images, category, description } = req.body;
-    const proj = await Project.findByIdAndUpdate(id, { title, images, category, description }, { new: true });
+    const { title, images, category, description, price, material, dimensions, details } = req.body;
+    const proj = await Project.findByIdAndUpdate(id, {
+      title,
+      images,
+      category,
+      description,
+      price: Number(price) || 0,
+      material: material || '',
+      dimensions: dimensions || '',
+      details: Array.isArray(details) ? details : []
+    }, { new: true });
     res.json(proj);
   } catch (error) {
     console.error('Error updating project:', error);
