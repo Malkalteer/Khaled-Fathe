@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Star } from 'lucide-react';
-import { ProductRating } from './ProductRating';
+import { saveProductInteraction } from '../services/productInteractions';
 
 interface FavoriteProject {
   _id: string;
@@ -19,34 +19,56 @@ const FavoritesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const loadFavorites = async () => {
+    const user = localStorage.getItem('user');
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('https://khaled-fathe.onrender.com/api/product-interactions/favorites', {
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        throw new Error('تعذّر تحميل المفضلة');
+      }
+
+      const data = await res.json();
+      setFavorites(data || []);
+    } catch {
+      setFavorites([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadFavorites = async () => {
-      const user = localStorage.getItem('user');
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const res = await fetch('https://khaled-fathe.onrender.com/api/product-interactions/favorites', {
-          credentials: 'include',
-        });
-
-        if (!res.ok) {
-          throw new Error('تعذّر تحميل المفضلة');
-        }
-
-        const data = await res.json();
-        setFavorites(data || []);
-      } catch {
-        setFavorites([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadFavorites();
   }, []);
+
+  const handleFavoriteToggle = async (productId: string) => {
+    const user = localStorage.getItem('user');
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const current = favorites.find((item) => item._id === productId);
+    const nextFavorite = !current;
+
+    try {
+      await saveProductInteraction(productId, { favorite: nextFavorite });
+      if (nextFavorite) {
+        await loadFavorites();
+      } else {
+        setFavorites((prev) => prev.filter((item) => item._id !== productId));
+      }
+    } catch (error) {
+      console.error('Remove favorite error:', error);
+    }
+  };
 
   if (!localStorage.getItem('user')) {
     return (
@@ -108,9 +130,14 @@ const FavoritesPage: React.FC = () => {
                 <div className="space-y-3 p-5">
                   <div className="flex items-center justify-between gap-3">
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white">{product.title}</h3>
-                    <span className="rounded-full bg-red-50 px-2 py-1 text-[10px] font-semibold text-red-500 dark:bg-red-950/30">
-                      مفضلة
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleFavoriteToggle(product._id)}
+                      aria-label="إزالة من المفضلة"
+                      className="rounded-full border border-red-200 bg-red-50 p-1.5 text-red-500 transition hover:scale-105"
+                    >
+                      <Heart className="h-4 w-4 fill-current" />
+                    </button>
                   </div>
 
                   <p className="line-clamp-2 text-sm text-gray-500 dark:text-gray-400">{product.description}</p>
@@ -121,8 +148,6 @@ const FavoritesPage: React.FC = () => {
                     <span>•</span>
                     <span>{product.votes || 0} صوت</span>
                   </div>
-
-                  <ProductRating productId={product._id} compact />
 
                   <button
                     onClick={() => navigate(`/portfolio/${typeof product.category === 'object' && product.category ? product.category._id : 'all'}`)}

@@ -12,6 +12,18 @@ exports.getAllowedOrigins = () => [
 
 const getAccessToken = (req) => req.cookies && req.cookies.accessToken;
 
+exports.optionalAuth = (req, res, next) => {
+  const token = getAccessToken(req);
+  if (!token) return next();
+
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    req.user = null;
+  }
+  next();
+};
+
 exports.requireAuth = (req, res, next) => {
   const token = getAccessToken(req);
   if (!token) return res.status(401).json({ message: "غير مصرح" });
