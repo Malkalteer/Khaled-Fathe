@@ -52,7 +52,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
   }, []);
 
   const handleLogout = async () => {
-    await fetch('https://khfdesign.cloud//api/auth/logout', {
+    await fetch('https://khfdesign.cloud/api/auth/logout', {
       method: 'POST',
       credentials: 'include'
     });
