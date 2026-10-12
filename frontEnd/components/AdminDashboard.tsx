@@ -13,7 +13,7 @@ interface Review {
   username: string;
   text: string;
 }
-const API_URL = 'https://khfdesign.cloud/';
+const API_URL = 'https://khfdesign.cloud';
 const AdminDashboard: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);

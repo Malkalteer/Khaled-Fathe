@@ -1,4 +1,4 @@
-const API_URL = 'https://khfdesign.cloud/';
+const API_URL = 'https://khfdesign.cloud';
 
 export type ProductInteractionStats = {
   productId: string;

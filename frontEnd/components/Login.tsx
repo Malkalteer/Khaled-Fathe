@@ -10,7 +10,7 @@ const Login: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    fetch('https://khfdesign.cloud//api/auth/login', {
+    fetch('https://khfdesign.cloud/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

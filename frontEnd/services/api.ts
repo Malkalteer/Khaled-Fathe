@@ -24,7 +24,7 @@ export interface Project {
   userFavorite?: boolean;
 }
 
-const API_URL = 'https://khfdesign.cloud/api';
+const API_URL = 'https://khfdesign.cloud';
 
 const normalizeImageUrl = (url: string): string => {
   if (!url) return url;

@@ -27,7 +27,7 @@ const FavoritesPage: React.FC = () => {
     }
 
     try {
-      const res = await fetch('https://khfdesign.cloud//api/product-interactions/favorites', {
+      const res = await fetch('https://khfdesign.cloud/api/product-interactions/favorites', {
         credentials: 'include',
       });
 
