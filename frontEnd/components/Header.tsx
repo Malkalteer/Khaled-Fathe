@@ -34,7 +34,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
 
   useEffect(() => {
     const refreshSession = async () => {
-      const response = await fetch('https://khfdesign.cloud//api/auth/refresh', {
+      const response = await fetch('https://khfdesign.cloud/api/auth/refresh', {
         method: 'POST',
         credentials: 'include'
       });
