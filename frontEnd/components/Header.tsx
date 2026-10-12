@@ -34,7 +34,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
 
   useEffect(() => {
     const refreshSession = async () => {
-      const response = await fetch('https://khaled-fathe.onrender.com/api/auth/refresh', {
+      const response = await fetch('https://khfdesign.cloud//api/auth/refresh', {
         method: 'POST',
         credentials: 'include'
       });
@@ -52,7 +52,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
   }, []);
 
   const handleLogout = async () => {
-    await fetch('https://khaled-fathe.onrender.com/api/auth/logout', {
+    await fetch('https://khfdesign.cloud//api/auth/logout', {
       method: 'POST',
       credentials: 'include'
     });

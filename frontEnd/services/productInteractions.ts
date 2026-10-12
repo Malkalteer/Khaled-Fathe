@@ -1,4 +1,4 @@
-const API_URL = 'https://khaled-fathe.onrender.com';
+const API_URL = 'https://khfdesign.cloud/';
 
 export type ProductInteractionStats = {
   productId: string;

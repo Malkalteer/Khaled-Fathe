@@ -29,7 +29,7 @@ const Register: React.FC = () => {
       return;
     }
 
-    fetch('https://khaled-fathe.onrender.com/api/auth/register', {
+    fetch('https://khfdesign.cloud//api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

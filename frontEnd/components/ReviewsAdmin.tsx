@@ -17,7 +17,7 @@ const ReviewsAdmin: React.FC = () => {
   const fetchReviews = async () => {
     setLoading(true);
     try {
-      const res = await fetch('https://khaled-fathe.onrender.com/api/reviews');
+      const res = await fetch('https://khfdesign.cloud//api/reviews');
       const data = await res.json();
       setReviews(data);
       setError('');
@@ -36,7 +36,7 @@ const ReviewsAdmin: React.FC = () => {
     if (!window.confirm('هل أنت متأكد من حذف هذا التعليق؟')) return;
     setDeleting(id);
     try {
-      const res = await fetch(`https://khaled-fathe.onrender.com/api/reviews/${id}`, { method: 'DELETE', credentials: 'include' });
+      const res = await fetch(`https://khfdesign.cloud//api/reviews/${id}`, { method: 'DELETE', credentials: 'include' });
       if (!res.ok) throw new Error('فشل الحذف');
       setReviews(reviews => reviews.filter(r => r._id !== id));
     } catch {
