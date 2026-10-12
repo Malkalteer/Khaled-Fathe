@@ -61,6 +61,21 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ project, cate
     setIsCartOpen(true);
   };
 
+  const categoryName = categories.find(c => c._id === (typeof project.category === 'string' ? project.category : project.category._id))?.name || 'تصميم مخصص';
+  const whatsappMessage = [
+    'مرحباً 👋',
+    'أرغب في الاستفسار عن المنتج التالي:',
+    `- الاسم: ${project.title}`,
+    `- الفئة: ${categoryName}`,
+    `- السعر: ${Number(project.price || 0).toFixed(2)} دولار`,
+    `- المادة: ${project.material || 'غير محددة'}`,
+    `- الأبعاد: ${project.dimensions || 'غير محددة'}`,
+    `- الوصف: ${project.description || 'لا يوجد وصف إضافي'}`,
+    '',
+    'هل يمكنكم تزويدني بمزيد من التفاصيل حول التوفر والتوصيل؟ 😊',
+  ].join('\n');
+  const whatsappUrl = `https://wa.me/201143226557?text=${encodeURIComponent(whatsappMessage)}`;
+
   return (
     <div className="fixed inset-0 z-50 w-screen h-screen bg-black/70 backdrop-blur-sm overflow-hidden flex items-center justify-center p-0 md:p-6 animate-fade-in" style={{ direction: 'rtl' }}>
       <div className="relative flex flex-col md:flex-row w-full h-full md:max-w-7xl md:h-[min(860px,92vh)] overflow-hidden bg-white dark:bg-gray-900 md:rounded-3xl shadow-2xl animate-modal-in">
@@ -136,7 +151,8 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ project, cate
             <ShoppingCart size={16} />
             <span>أضف إلى السلة</span>
           </button>
-          <a href={`https://wa.me/201143226557?text=${encodeURIComponent(`أرغب في الاستفسار عن المنتج: ${project.title} - ${project.description}`)}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-green-500 text-white font-bold py-3 px-4 rounded-lg text-sm">
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 via-emerald-500 to-lime-500 text-white font-bold py-3 px-4 rounded-xl text-sm shadow-lg shadow-green-500/20 hover:shadow-xl hover:scale-[1.02] transition-all">
+            <span className="text-base">✦</span>
             <span>تواصل عبر واتساب</span>
           </a>
           <button onClick={onClose} className="bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white font-bold py-3 px-4 rounded-lg text-sm">رجوع</button>

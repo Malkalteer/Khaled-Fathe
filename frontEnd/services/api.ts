@@ -24,7 +24,7 @@ export interface Project {
   userFavorite?: boolean;
 }
 
-const API_URL = 'https://khaled-fathe.onrender.com';
+const API_URL = 'https://khfdesign.cloud/api';
 
 const normalizeImageUrl = (url: string): string => {
   if (!url) return url;
