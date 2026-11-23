@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import img1 from '../img/img1-removebg-preview.png';
-import img2 from '../img/img2-removebg-preview.png';
-import img3 from '../img/ViewCapture20260510_193902.png';
-import img4 from '../img/img4-removebg-preview.png';
+import img1 from '../img/hero-1.webp';
+import img2 from '../img/hero-2.webp';
+import img3 from '../img/hero-3.webp';
+import img4 from '../img/hero-4.webp';
 
 import { Camera, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
 

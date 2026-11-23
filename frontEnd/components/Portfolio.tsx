@@ -1,66 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layers, ShoppingCart } from 'lucide-react';
-import { api, Category, Project } from '../services/api';
-import { useCart } from '../context/CartContext';
-import { ProductRating } from './ProductRating';
-import { getProductInteractionStats } from '../services/productInteractions';
+import { Layers } from 'lucide-react';
+import { api, Category, Project, categoryIdOf } from '../services/api';
+import ProductCard from './ProductCard';
 
 const Portfolio: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { addToCart, setIsCartOpen } = useCart();
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const cats = await api.getCategories();
-      const projs = await api.getProjects();
-
-      const withStats = await Promise.all(
-        projs.map(async (project) => {
-          try {
-            const stats = await getProductInteractionStats(project._id);
-            return {
-              ...project,
-              averageRating: stats.averageRating || 0,
-              votes: stats.votes || 0,
-              favorites: stats.favorites || 0,
-              userRating: stats.userRating ?? null,
-              userFavorite: Boolean(stats.userFavorite),
-            };
-          } catch {
-            return {
-              ...project,
-              averageRating: 0,
-              votes: 0,
-              favorites: 0,
-              userRating: null,
-              userFavorite: false,
-            };
-          }
-        })
-      );
-
-      setCategories(cats);
-      setProjects(withStats);
-      setLoading(false);
+    let cancelled = false;
+    // طلبان فقط: الإحصائيات تأتي مع قائمة الأعمال نفسها
+    Promise.all([api.getCategories(), api.getProjects()])
+      .then(([cats, projs]) => {
+        if (cancelled) return;
+        setCategories(cats);
+        setProjects(projs);
+      })
+      .catch(() => undefined)
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
     };
-    fetchData();
   }, []);
 
-  // دالة مساعدة للتحقق من تطابق الفئة للمشروع
-  const isProjectInCategory = (project: Project, categoryId: string) => {
-    if (!project.category) return false;
-    if (typeof project.category === 'object' && project.category._id) {
-      return project.category._id === categoryId;
-    }
-    return project.category === categoryId;
-  };
+  const isProjectInCategory = (project: Project, categoryId: string) => categoryIdOf(project) === categoryId;
 
-const sortedProjects = [...projects].sort((a, b) => b._id.localeCompare(a._id));
+// الخادم يعيد الأعمال بالترتيب الذي حدده المدير من لوحة التحكم
+const sortedProjects = projects;
 
 const mainPageProjects = categories.map(cat => {
   return sortedProjects.find(project => isProjectInCategory(project, cat._id));
@@ -75,24 +44,6 @@ const rankedProjects = [...mainPageProjects].sort((a, b) => {
   // دالة الانتقال للمسار الجديد عند الضغط على الكاتيجوري
   const handleCategoryClick = (categoryId: string) => {
     navigate(`/portfolio/${categoryId}`);
-  };
-
-  const handleAddToCart = (project: Project, categoryName?: string) => {
-    const image = Array.isArray(project.images) && project.images.length > 0 ? project.images[0] : '';
-    addToCart({
-      ...project,
-      _id: project._id,
-      id: project._id,
-      title: project.title,
-      name: project.title,
-      image,
-      imgUrl: image,
-      img: image,
-      category: categoryName || 'تصميم مخصص',
-      averageRating: project.averageRating,
-      userFavorite: project.userFavorite,
-    });
-    setIsCartOpen(true);
   };
 
   return (
@@ -142,7 +93,9 @@ const rankedProjects = [...mainPageProjects].sort((a, b) => {
                   <img
                     src={cat.image}
                     alt={cat.name}
-                    className="w-full h-full group-hover:scale-110 transition-transform duration-500"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                 </div>
                 <span className="text-sm font-bold text-gray-500 dark:text-gray-400 group-hover:text-primary-600 transition-colors">
@@ -162,60 +115,23 @@ const rankedProjects = [...mainPageProjects].sort((a, b) => {
           <div className="text-center text-gray-400 py-20 text-lg">لا توجد مشاريع متاحة حالياً</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {rankedProjects.map((project) => {
+            {rankedProjects.map((project, index) => {
               const projectCat = categories.find(c => isProjectInCategory(project, c._id));
               return (
-                <div
+                <ProductCard
                   key={project._id}
-                  className="bg-white dark:bg-dark-card rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group flex flex-col justify-between"
-                >
-                  <div>
-                    <div
-                      onClick={() => projectCat && handleCategoryClick(projectCat._id)}
-                      className="relative overflow-hidden aspect-[4/3] cursor-pointer"
+                  project={project}
+                  index={index}
+                  categoryName={projectCat?.name}
+                  footer={projectCat && (
+                    <button
+                      onClick={() => handleCategoryClick(projectCat._id)}
+                      className="mt-3 w-full text-center text-sm font-semibold text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-900/50 hover:bg-primary-600 hover:text-white py-2 rounded-xl transition duration-300"
                     >
-                      <img
-                        src={Array.isArray(project.images) && project.images.length > 0 ? project.images[0] : ''}
-                        alt={project.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <button className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold py-3 px-6 rounded-xl transform -translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                          عرض مشاريع القسم
-                        </button>
-                      </div>
-                    </div>
-                    <div className="p-5">
-                      {projectCat && (
-                        <span
-                          onClick={() => handleCategoryClick(projectCat._id)}
-                          className="inline-block bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs px-2.5 py-1 rounded-md mb-2 font-medium cursor-pointer hover:text-primary-600"
-                        >
-                          فئة: {projectCat.name}
-                        </span>
-                      )}
-
-                      <div className="flex items-start justify-between gap-3">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{project.title}</h3>
-                      </div>
-
-                      <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{project.description}</p>
-                      <ProductRating productId={project._id} compact />
-                    </div>
-                  </div>
-
-                  {projectCat && (
-                    <div className="px-5 pb-5 space-y-3">
-                      
-                      <button
-                        onClick={() => handleCategoryClick(projectCat._id)}
-                        className="w-full text-center text-sm font-semibold text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-950/50 hover:bg-primary-600 hover:text-white py-2 rounded-xl transition duration-300"
-                      >
-                        عرض كافة مشاريع {projectCat.name}
-                      </button>
-                    </div>
+                      عرض كافة مشاريع {projectCat.name}
+                    </button>
                   )}
-                </div>
+                />
               );
             })}
           </div>

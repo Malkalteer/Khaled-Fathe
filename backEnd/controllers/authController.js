@@ -1,5 +1,9 @@
-const User = require("../models/User");
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const User = require("../models/User");
+const Review = require("../models/Review");
+const ProductInteraction = require("../models/ProductInteraction");
+const HttpError = require("../utils/httpError");
 const {
   issueTokens,
   hashRefreshToken,
@@ -8,7 +12,13 @@ const {
   cookieOptions
 } = require("../utils/authTokens");
 
+const MAX_FAILED_LOGS = 20;
+const LOCK_AFTER = 5;
+const LOCK_MINUTES = 15;
+// هاش وهمي لمقارنة وقت الاستجابة عندما لا يوجد المستخدم (يمنع كشف الإيميلات الموجودة)
+const DUMMY_HASH = "$2b$12$C6UzMDM.H6dfI/f/IKcEeU0eW7f7s4vSx7H7YQ3x3fGf7nJ4xQf5G";
 const invalidCredentials = "بيانات الدخول غير صحيحة";
+
 const publicUser = (user) => ({
   id: user._id,
   username: user.username,
@@ -20,9 +30,11 @@ const publicUser = (user) => ({
 const recordFailedLogin = async (user, req) => {
   if (!user) return;
   user.failedLoginAttempts += 1;
-  user.failedLoginLogs.push({ at: new Date(), ip: req.ip });
-  if (user.failedLoginAttempts >= 5) {
-    user.lockoutUntil = new Date(Date.now() + 15 * 60 * 1000);
+  user.failedLoginLogs.push({ at: new Date(), ip: req.ip || "unknown" });
+  // نحتفظ بآخر 20 محاولة فقط
+  user.failedLoginLogs = user.failedLoginLogs.slice(-MAX_FAILED_LOGS);
+  if (user.failedLoginAttempts >= LOCK_AFTER) {
+    user.lockoutUntil = new Date(Date.now() + LOCK_MINUTES * 60 * 1000);
     user.failedLoginAttempts = 0;
   }
   await user.save();
@@ -30,60 +42,50 @@ const recordFailedLogin = async (user, req) => {
 
 exports.register = async (req, res) => {
   const { username, email, password, phone } = req.body;
-  try {
-    const userExists = await User.findOne({ email });
-    if (userExists) return res.status(400).json({ message: "تعذر إنشاء الحساب" });
+  const userExists = await User.exists({ email });
+  if (userExists) throw new HttpError(400, "تعذر إنشاء الحساب، ربما البريد مستخدم مسبقاً");
 
-    const hashedPassword = await bcrypt.hash(password, 12);
-    const user = await User.create({ username, email, password: hashedPassword, phone, isAdmin: false });
-    res.status(201).json({ message: "تم إنشاء الحساب بنجاح", user: publicUser(user) });
-  } catch (error) {
-    console.error("Register error:", error.message);
-    res.status(500).json({ message: "تعذر إنشاء الحساب" });
-  }
+  const hashedPassword = await bcrypt.hash(password, 12);
+  const user = await User.create({ username, email, password: hashedPassword, phone, isAdmin: false });
+  res.status(201).json({ message: "تم إنشاء الحساب بنجاح", user: publicUser(user) });
 };
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
-  try {
-    const user = await User.findOne({ email });
-    const passwordMatches = user
-      ? await bcrypt.compare(password, user.password)
-      : await bcrypt.compare(password, "$2b$12$C6UzMDM.H6dfI/f/IKcEeU0eW7f7s4vSx7H7YQ3x3fGf7nJ4xQf5G");
+  const user = await User.findOne({ email });
+  const passwordMatches = await bcrypt.compare(password, user ? user.password : DUMMY_HASH);
 
-    const locked = user && user.lockoutUntil && user.lockoutUntil > new Date();
-    if (!user || locked || !passwordMatches) {
-      await recordFailedLogin(user, req);
-      return res.status(400).json({ message: invalidCredentials });
-    }
-
-    user.failedLoginAttempts = 0;
-    user.lockoutUntil = null;
-    await issueTokens(user, res);
-    res.status(200).json({ message: "تم تسجيل الدخول", user: publicUser(user) });
-  } catch (error) {
-    console.error("Login error:", error.message);
-    res.status(500).json({ message: "تعذر تسجيل الدخول" });
+  const locked = user && user.lockoutUntil && user.lockoutUntil > new Date();
+  if (!user || locked || !passwordMatches) {
+    await recordFailedLogin(user, req);
+    throw new HttpError(400, invalidCredentials);
   }
+
+  user.failedLoginAttempts = 0;
+  user.lockoutUntil = null;
+  await issueTokens(user, res);
+  res.status(200).json({ message: "تم تسجيل الدخول", user: publicUser(user) });
 };
 
 exports.refresh = async (req, res) => {
   const token = req.cookies[REFRESH_COOKIE];
-  if (!token) return res.status(401).json({ message: "انتهت الجلسة" });
-  try {
-    const tokenHash = hashRefreshToken(token);
-    const user = await User.findOne({ "refreshTokens.tokenHash": tokenHash });
-    const session = user?.refreshTokens.find((item) => item.tokenHash === tokenHash);
-    if (!user || !session || session.expiresAt <= new Date()) {
-      return res.status(401).json({ message: "انتهت الجلسة" });
-    }
-    user.refreshTokens = user.refreshTokens.filter((item) => item.tokenHash !== tokenHash);
-    await issueTokens(user, res);
-    res.json({ user: publicUser(user) });
-  } catch (error) {
-    console.error("Refresh error:", error.message);
-    res.status(401).json({ message: "انتهت الجلسة" });
+  if (!token) throw new HttpError(401, "انتهت الجلسة");
+
+  const tokenHash = hashRefreshToken(token);
+  const user = await User.findOne({ "refreshTokens.tokenHash": tokenHash });
+  const session = user?.refreshTokens.find((item) => item.tokenHash === tokenHash);
+  if (!user || !session || session.expiresAt <= new Date()) {
+    throw new HttpError(401, "انتهت الجلسة");
   }
+  user.refreshTokens = user.refreshTokens.filter((item) => item.tokenHash !== tokenHash);
+  await issueTokens(user, res);
+  res.json({ user: publicUser(user) });
+};
+
+exports.me = async (req, res) => {
+  const user = await User.findById(req.user.sub);
+  if (!user) throw new HttpError(401, "انتهت الجلسة");
+  res.json({ user: publicUser(user) });
 };
 
 exports.logout = async (req, res) => {
@@ -101,22 +103,23 @@ exports.logout = async (req, res) => {
 };
 
 exports.getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find({}, { password: 0, refreshTokens: 0 });
-    res.json({ users });
-  } catch (error) {
-    console.error("Error fetching users:", error.message);
-    res.status(500).json({ message: "تعذر جلب المستخدمين" });
-  }
+  const users = await User.find({}, { password: 0, refreshTokens: 0, failedLoginLogs: 0 }).sort({ createdAt: -1 });
+  res.json({ users });
 };
 
 exports.deleteUser = async (req, res) => {
-  try {
-    const deleted = await User.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: "المستخدم غير موجود" });
-    res.json({ message: "تم حذف المستخدم" });
-  } catch (error) {
-    console.error("Error deleting user:", error.message);
-    res.status(500).json({ message: "تعذر حذف المستخدم" });
-  }
+  const { id } = req.params;
+  if (id === req.user.sub) throw new HttpError(400, "لا يمكنك حذف حسابك الحالي");
+
+  const user = await User.findById(id);
+  if (!user) throw new HttpError(404, "المستخدم غير موجود");
+  if (user.isAdmin) throw new HttpError(403, "لا يمكن حذف حساب مدير");
+
+  const userId = new mongoose.Types.ObjectId(id);
+  await Promise.all([
+    User.deleteOne({ _id: userId }),
+    Review.deleteMany({ user: userId }),
+    ProductInteraction.deleteMany({ user: userId })
+  ]);
+  res.json({ message: "تم حذف المستخدم" });
 };

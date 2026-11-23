@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Moon, Sun, Menu, X, ShoppingCart, Heart } from 'lucide-react';
+import React from 'react';
+import { Moon, Sun, Menu, X, ShoppingCart, Heart, LayoutDashboard } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Theme } from '../types';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 interface HeaderProps {
   theme: Theme;
@@ -11,53 +12,12 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const [user, setUser] = useState<any | null>(null);
+  const { user, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const { cart, setIsCartOpen } = useCart();
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('user');
-      if (raw) setUser(JSON.parse(raw));
-    } catch (e) {
-      setUser(null);
-    }
-
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'user') {
-        setUser(e.newValue ? JSON.parse(e.newValue) : null);
-      }
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
-
-  useEffect(() => {
-    const refreshSession = async () => {
-      const response = await fetch('https://khfdesign.cloud/api/auth/refresh', {
-        method: 'POST',
-        credentials: 'include'
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.user) {
-          localStorage.setItem('user', JSON.stringify(data.user));
-          setUser(data.user);
-        }
-      }
-    };
-    refreshSession().catch(() => undefined);
-    const timer = window.setInterval(() => refreshSession().catch(() => undefined), 14 * 60 * 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-
   const handleLogout = async () => {
-    await fetch('https://khfdesign.cloud/api/auth/logout', {
-      method: 'POST',
-      credentials: 'include'
-    });
-    localStorage.removeItem('user');
-    setUser(null);
+    await logout();
     navigate('/');
   };
 
@@ -74,17 +34,6 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const isAdmin = () => {
-    const user = localStorage.getItem('user');
-    if (!user) return false;
-    try {
-      const parsed = JSON.parse(user);
-      return parsed.isAdmin === true;
-    } catch {
-      return false;
     }
   };
 
@@ -112,9 +61,12 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
              </button>
              
           ))}
-          {isAdmin() && (
-                <Link to="/admin" className="hidden md:inline-block text-sm bg-green-500 text-white px-3 py-1 rounded-md hover:opacity-90">إدارة</Link>
-              )}
+          <Link to="/quote" className="text-gray-600 dark:text-gray-300 hover:text-primary-500 font-medium transition-colors text-sm lg:text-base">اطلب عرض سعر</Link>
+          {isAdmin && (
+            <Link to="/admin" className="inline-flex items-center gap-1.5 text-sm bg-emerald-600 text-white px-3 py-1.5 rounded-md hover:bg-emerald-700">
+              <LayoutDashboard size={16} /> لوحة التحكم
+            </Link>
+          )}
         </nav>
 
         {/* Actions */}
@@ -165,6 +117,8 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
 
           <button 
             className="md:hidden text-gray-800 dark:text-white"
+            aria-label="القائمة"
+            aria-expanded={isMenuOpen}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -185,6 +139,10 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
                  {item.label}
                </button>
             ))}
+            <Link to="/quote" onClick={() => setIsMenuOpen(false)} className="text-right text-gray-700 dark:text-gray-300 hover:text-primary-500 font-medium py-2">اطلب عرض سعر</Link>
+            {isAdmin && (
+              <Link to="/admin" onClick={() => setIsMenuOpen(false)} className="text-right text-emerald-600 font-semibold py-2">لوحة التحكم</Link>
+            )}
             <div className="flex flex-col items-stretch pt-2 border-t border-gray-100 dark:border-gray-800 mt-2">
               {user ? (
                 <>

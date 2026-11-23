@@ -1,11 +1,18 @@
 const express = require('express');
-const router = express.Router();
 const projectController = require('../controllers/projectController');
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireAdmin, optionalAuth } = require('../middleware/auth');
+const { idParam, projectValidation, reorderValidation } = require('../middleware/validation');
 
-router.get('/', projectController.getProjects);
-router.post('/', requireAuth, requireAdmin, projectController.createProject);
-router.put('/:id', requireAuth, requireAdmin, projectController.updateProject);
-router.delete('/:id', requireAuth, requireAdmin, projectController.deleteProject);
+const router = express.Router();
+const admin = [requireAuth, requireAdmin];
+
+router.get('/', optionalAuth, projectController.getProjects);
+router.get('/admin', ...admin, projectController.getAdminProjects);
+router.put('/reorder', ...admin, reorderValidation, projectController.reorderProjects);
+router.get('/:id', optionalAuth, idParam(), projectController.getProject);
+router.post('/', ...admin, projectValidation, projectController.createProject);
+router.put('/:id', ...admin, idParam(), projectValidation, projectController.updateProject);
+router.patch('/:id/visibility', ...admin, idParam(), projectController.setVisibility);
+router.delete('/:id', ...admin, idParam(), projectController.deleteProject);
 
 module.exports = router;
