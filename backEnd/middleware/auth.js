@@ -7,7 +7,8 @@ exports.getAllowedOrigins = () => [
     .filter(Boolean),
   "http://localhost:3000",
   "http://localhost:5173",
-  "https://khaled-fathe.vercel.app"
+  "https://khfdesign.cloud",
+  "https://www.khfdesign.cloud"
 ];
 
 const getAccessToken = (req) => req.cookies && req.cookies.accessToken;
