@@ -3,7 +3,7 @@ const Category = require('../models/Category');
 
 const escapeXml = (value) => String(value).replace(/[<>&'"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' }[c]));
 
-const siteUrl = () => (process.env.SITE_URL || 'https://khaled-fathe.vercel.app').replace(/\/$/, '');
+const siteUrl = () => (process.env.SITE_URL || 'https://khfdesign.cloud').replace(/\/$/, '');
 
 // GET /sitemap.xml — يُنشأ تلقائياً من الأعمال والفئات الموجودة
 exports.sitemap = async (req, res) => {

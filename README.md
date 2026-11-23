@@ -2,10 +2,13 @@
 
 موقع أعمال (Portfolio) ومتجر استفسارات لخدمات التصميم الهندسي والحفر بالـ CNC، مع لوحة تحكم كاملة للإدارة.
 
-| الجزء | التقنيات | الاستضافة الحالية |
-|------|-----------|-------------------|
-| `frontEnd/` | React 19 · Vite · TypeScript · Tailwind | Vercel — `khaled-fathe.vercel.app` |
-| `backEnd/` | Node.js · Express 5 · MongoDB (Mongoose) · Cloudinary · Gemini | `khfdesign.cloud` |
+| الجزء | التقنيات |
+|------|-----------|
+| `frontEnd/` | React 19 · Vite · TypeScript · Tailwind |
+| `backEnd/` | Node.js · Express 5 · MongoDB (Mongoose) · Cloudinary · Gemini |
+
+الموقع كله على سيرفر VPS واحد بدومين **https://khfdesign.cloud**:
+nginx يعرض الواجهة المبنية من `frontEnd/dist`، ويحوّل `/api` و`/sitemap.xml` إلى خادم Node.js (pm2) على المنفذ 5000.
 
 ## المزايا
 
@@ -54,11 +57,23 @@ npm run dev            # http://localhost:3000
 
 | المتغير | الوصف |
 |---------|-------|
-| `VITE_API_URL` | رابط الخادم |
+| `VITE_API_URL` | رابط الخادم — اتركه فارغاً في الإنتاج (نفس الدومين) |
 | `VITE_SITE_URL` | رابط الموقع العام (للمشاركة وSEO) |
 | `VITE_WHATSAPP_NUMBER` | رقم واتساب بالصيغة الدولية بدون + |
 
 > ⚠️ كل متغير يبدأ بـ `VITE_` يصل إلى المتصفح، فلا تضع فيه أي مفتاح سري.
+
+## النشر على السيرفر (VPS)
+
+بعد أي تعديل يُدمج في `main`، ادخل إلى السيرفر بـ SSH وشغّل:
+
+```bash
+bash /var/www/khfdesign/deploy/deploy.sh
+```
+
+السكربت يسحب التعديلات، ويثبّت الحزم، ويبني الواجهة، ويعيد تشغيل `khfdesign-api` في pm2.
+
+إعدادات nginx موجودة في `deploy/nginx-khfdesign.conf`.
 
 ## الاختبارات وCI
 

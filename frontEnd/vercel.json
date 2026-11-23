@@ -1,6 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/sitemap.xml", "destination": "https://khfdesign.cloud/sitemap.xml" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}

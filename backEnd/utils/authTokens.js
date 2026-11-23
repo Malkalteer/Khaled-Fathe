@@ -8,7 +8,9 @@ const isProduction = process.env.NODE_ENV === "production";
 const cookieOptions = {
   httpOnly: true,
   secure: isProduction,
-  sameSite: isProduction ? "none" : "lax",
+  // الموقع والـ API على نفس الدومين، لذلك "lax" يكفي وهو أكثر أماناً (يحمي من CSRF).
+  // إذا فُصلت الواجهة على دومين آخر مستقبلاً ضع COOKIE_SAMESITE=none
+  sameSite: process.env.COOKIE_SAMESITE || "lax",
   path: "/"
 };
 
