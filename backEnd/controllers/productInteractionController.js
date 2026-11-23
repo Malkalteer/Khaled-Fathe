@@ -1,123 +1,62 @@
+const mongoose = require('mongoose');
 const ProductInteraction = require('../models/ProductInteraction');
 const Project = require('../models/Project');
+const HttpError = require('../utils/httpError');
+const { getStatsForProducts, withStats, getUserId } = require('../services/productStats');
 
 const ensureProjectExists = async (productId) => {
-  const project = await Project.findById(productId);
-  if (!project) throw new Error('Project not found');
-  return project;
+  if (!(await Project.exists({ _id: productId }))) throw new HttpError(404, 'العمل غير موجود');
+};
+
+const statsResponse = async (productId, userId) => {
+  const stats = await getStatsForProducts([productId], userId);
+  return { productId, ...stats.get(String(productId)) };
 };
 
 exports.getProductStats = async (req, res) => {
-  try {
-    const { productId } = req.params;
-    await ensureProjectExists(productId);
-
-    const interactions = await ProductInteraction.find({ product: productId });
-
-    const ratings = interactions
-      .filter((item) => item.rating != null)
-      .map((item) => item.rating);
-    const totalRating = ratings.reduce((sum, value) => sum + value, 0);
-    const averageRating = ratings.length ? totalRating / ratings.length : 0;
-    const votes = ratings.length;
-    const favorites = interactions.filter((item) => item.favorite).length;
-
-    const userId = req.user ? req.user.sub || req.user.id : null;
-    const userRating = userId
-      ? await ProductInteraction.findOne({ product: productId, user: userId }).select('rating favorite')
-      : null;
-
-    res.json({
-      productId,
-      averageRating: Number(averageRating.toFixed(2)),
-      votes,
-      favorites,
-      userRating: userRating ? userRating.rating : null,
-      userFavorite: userRating ? userRating.favorite : false,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to load product stats' });
-  }
+  const { productId } = req.params;
+  await ensureProjectExists(productId);
+  res.json(await statsResponse(productId, getUserId(req)));
 };
 
+// GET /api/product-interactions/favorites — استعلامان فقط مهما كان عدد المفضلة
 exports.getUserFavorites = async (req, res) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'غير مصرح' });
-    }
-
-    const userId = req.user.sub || req.user.id;
-    const favorites = await ProductInteraction.find({ user: userId, favorite: true })
-      .populate({
-        path: 'product',
-        populate: { path: 'category', select: '_id name' },
-      });
-
-    const formatted = await Promise.all(
-      favorites
-        .filter((item) => item.product)
-        .map(async (item) => {
-          const project = item.product.toObject ? item.product.toObject() : item.product;
-          const productInteractions = await ProductInteraction.find({ product: project._id });
-          const ratings = productInteractions
-            .filter((entry) => entry.rating != null)
-            .map((entry) => entry.rating);
-          const averageRating = ratings.length
-            ? ratings.reduce((sum, value) => sum + value, 0) / ratings.length
-            : 0;
-
-          return {
-            _id: project._id,
-            title: project.title,
-            description: project.description || '',
-            images: project.images || [],
-            category: project.category || null,
-            averageRating: Number(averageRating.toFixed(2)),
-            votes: ratings.length,
-            favorites: productInteractions.filter((entry) => entry.favorite).length,
-          };
-        })
-    );
-
-    res.json(formatted);
-  } catch (error) {
-    console.error('Get user favorites error:', error.message || error);
-    res.status(500).json({ message: 'تعذّر تحميل المفضلة' });
-  }
+  const userId = new mongoose.Types.ObjectId(getUserId(req));
+  const favorites = await ProductInteraction.find({ user: userId, favorite: true }).select('product').lean();
+  const projects = await Project.find({ _id: { $in: favorites.map((f) => f.product) }, hidden: { $ne: true } })
+    .populate('category', '_id name')
+    .lean();
+  const data = await withStats(projects, userId);
+  res.json(data.map((p) => ({
+    _id: p._id,
+    title: p.title,
+    description: p.description || '',
+    images: p.images || [],
+    category: p.category || null,
+    price: p.price,
+    averageRating: p.averageRating,
+    votes: p.votes,
+    favorites: p.favorites,
+    userRating: p.userRating,
+    userFavorite: true,
+  })));
 };
 
 exports.saveInteraction = async (req, res) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'غير مصرح' });
-    }
+  const { productId } = req.params;
+  const { rating, favorite } = req.body;
+  const userId = getUserId(req);
+  await ensureProjectExists(productId);
 
-    const { productId } = req.params;
-    const { rating, favorite } = req.body;
-    const userId = req.user.sub || req.user.id;
+  const update = {};
+  if (rating != null) update.rating = rating;
+  if (favorite != null) update.favorite = favorite;
+  if (Object.keys(update).length === 0) throw new HttpError(400, 'لا يوجد شيء لحفظه');
 
-    await ensureProjectExists(productId);
-
-    const interaction = await ProductInteraction.findOne({ product: productId, user: userId });
-
-    if (interaction) {
-      if (rating != null) interaction.rating = Math.min(5, Math.max(1, Number(rating)));
-      if (favorite != null) interaction.favorite = Boolean(favorite);
-      await interaction.save();
-      const updated = await ProductInteraction.findOne({ product: productId, user: userId }).select('rating favorite');
-      return res.json({ success: true, interaction: updated });
-    }
-
-    const newInteraction = new ProductInteraction({
-      product: productId,
-      user: userId,
-      rating: rating != null ? Math.min(5, Math.max(1, Number(rating))) : null,
-      favorite: favorite != null ? Boolean(favorite) : false,
-    });
-
-    await newInteraction.save();
-    res.status(201).json({ success: true, interaction: newInteraction });
-  } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to save interaction' });
-  }
+  await ProductInteraction.findOneAndUpdate(
+    { product: productId, user: userId },
+    { $set: update },
+    { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
+  );
+  res.json(await statsResponse(productId, userId));
 };

@@ -1,20 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-type Review = {
-  name: string;
-  location?: string;
-  rating: number; // 0-5
-  text: string;
-};
-
-const fetchReviews = async () => {
-  const res = await fetch('https://khfdesign.cloud/api/reviews');
-  if (!res.ok) throw new Error('فشل في جلب التعليقات');
-  const data = await res.json();
-  // إذا كان backend يعيد { reviews: [...] }
-  return Array.isArray(data) ? data : data.reviews;
-};
+import { api, Review } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const StarFilled = ({ className = 'w-4 h-4' }: { className?: string }) => (
   <svg className={className} viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
@@ -37,12 +24,7 @@ const renderStars = (rating: number) => {
 };
 
 const Evaluation: React.FC = () => {
-  // جلب المستخدم من localStorage
-  let user = null;
-  try {
-    const raw = localStorage.getItem('user');
-    if (raw) user = JSON.parse(raw);
-  } catch {}
+  const { user } = useAuth();
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +33,7 @@ const Evaluation: React.FC = () => {
 
   useEffect(() => {
     setLoading(true);
-    fetchReviews()
+    api.getReviews()
       .then((arr) => setReviews(Array.isArray(arr) ? arr : []))
       .catch(() => setError('تعذر تحميل التعليقات'))
       .finally(() => setLoading(false));
@@ -84,7 +66,7 @@ const Evaluation: React.FC = () => {
               إضافة تعليق وتقييم
             </button>
           ) : (
-            <div className="text-gray-600 dark:text-gray-300 text-lg">سجّل الدخول لإضافة تعليقك وتقييمك</div>
+            <button className="text-primary-600 dark:text-primary-400 text-lg hover:underline" onClick={() => navigate('/login')}>سجّل الدخول لإضافة تعليقك وتقييمك</button>
           )}
         </div>
         {loading ? (

@@ -47,3 +47,21 @@ body {
 .animate-modal-in { animation: modal-in 350ms cubic-bezier(.22, 1, .36, 1) both; }
 .animate-image-in { animation: image-in 450ms ease-out both; }
 .animate-card-in { animation: card-in 500ms ease-out both; }
+/* ===== أزرار وحقول موحدة (تُستخدم في لوحة التحكم والنماذج) ===== */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-offset-gray-900;
+  }
+  .btn-primary { @apply btn bg-primary-600 text-white hover:bg-primary-700 shadow-sm; }
+  .btn-secondary { @apply btn border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700; }
+  .btn-danger { @apply btn bg-red-600 text-white hover:bg-red-700 shadow-sm; }
+  .btn-ghost { @apply btn text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800; }
+  .btn-icon { @apply inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 disabled:opacity-40 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white; }
+
+  .field-label { @apply mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300; }
+  .field {
+    @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500;
+  }
+  .card { @apply rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900; }
+  .badge { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold; }
+}

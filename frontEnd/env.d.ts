@@ -1,21 +1,11 @@
+/// <reference types="vite/client" />
+
 interface ImportMetaEnv {
-  readonly VITE_GEMINI_API_KEY?: string;
+  readonly VITE_API_URL?: string;
+  readonly VITE_SITE_URL?: string;
+  readonly VITE_WHATSAPP_NUMBER?: string;
 }
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
-
-export {};
-
-
-interface ImportMetaEnv {
-  readonly VITE_GEMINI_API_KEY?: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
-
-export {};
-

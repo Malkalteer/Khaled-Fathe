@@ -1,50 +1,15 @@
-const express = require("express");
-const dotenv = require("dotenv");
-const mongoose = require("mongoose");
+const app = require("./app");
 const connectDB = require("./config/db");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-const helmet = require("helmet");
-const path = require("path");
-const { verifyRequestOrigin, getAllowedOrigins } = require("./middleware/auth");
 const seedAdmin = require("./seed");
 
-dotenv.config();
-
-const app = express();
-app.set("trust proxy", 1);
-app.use(helmet());
-app.use(express.json({ limit: "1mb" }));
-app.use(cookieParser());
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || getAllowedOrigins().includes(origin)) return callback(null, true);
-    return callback(new Error("Origin غير مسموح"));
-  },
-  credentials: true
-}));
-app.use(verifyRequestOrigin);
-
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
-
-app.use("/api/auth", require("./routes/auth"));
-app.use("/api/reviews", require("./routes/reviews"));
-app.use("/api/categories", require("./routes/categories"));
-app.use("/api/projects", require("./routes/projects"));
-app.use("/api/product-interactions", require("./routes/productInteractions"));
-app.use("/api/upload", require("./routes/upload"));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-app.get("/health", (req, res) => {
-  res.json({ server: "ok", dbState: mongoose.connection.readyState });
-});
-
 const PORT = process.env.PORT || 5000;
+
 const start = async () => {
   try {
+    if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is required");
+    if (process.env.JWT_SECRET.length < 32) {
+      console.warn("Warning: JWT_SECRET is shorter than 32 characters; use a longer random secret.");
+    }
     await connectDB();
     await seedAdmin();
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
