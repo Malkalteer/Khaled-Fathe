@@ -5,7 +5,7 @@
 | الجزء | التقنيات |
 |------|-----------|
 | `frontEnd/` | React 19 · Vite · TypeScript · Tailwind |
-| `backEnd/` | Node.js · Express 5 · MongoDB (Mongoose) · Cloudinary · Gemini |
+| `backEnd/` | Node.js · Express 5 · MongoDB (Mongoose) · sharp · Gemini |
 
 الموقع كله على سيرفر VPS واحد بدومين **https://khfdesign.cloud**:
 nginx يعرض الواجهة المبنية من `frontEnd/dist`، ويحوّل `/api` و`/sitemap.xml` إلى خادم Node.js (pm2) على المنفذ 5000.
@@ -21,7 +21,7 @@ nginx يعرض الواجهة المبنية من `frontEnd/dist`، ويحوّل
 
 ## التشغيل محلياً
 
-المتطلبات: Node.js 20 أو أحدث، وقاعدة MongoDB (محلية أو Atlas)، وحساب Cloudinary لرفع الصور والملفات.
+المتطلبات: Node.js 20 أو أحدث، وقاعدة MongoDB (محلية أو Atlas).
 
 ### 1) الخادم
 
@@ -38,7 +38,7 @@ npm run dev            # http://localhost:5000
 | `JWT_SECRET` | سر عشوائي طويل (32 حرفاً أو أكثر) |
 | `FRONTEND_URL` | نطاقات الواجهة المسموح لها (مفصولة بفاصلة) |
 | `SITE_URL` | رابط الموقع العام (يُستخدم في sitemap) |
-| `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | تخزين الصور وملفات التصميم |
+| `UPLOADS_DIR` | مجلد حفظ الصور وملفات العملاء على السيرفر (مثل `/var/www/khfdesign-uploads`) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | يُنشأ حساب المدير تلقائياً عند أول تشغيل |
 | `GEMINI_API_KEY` | مفتاح المساعد الذكي (في الخادم فقط) |
 | `GEMINI_MODEL` | اختياري — الافتراضي `gemini-3-flash-preview` |
@@ -74,6 +74,22 @@ bash /var/www/khfdesign/deploy/deploy.sh
 السكربت يسحب التعديلات، ويثبّت الحزم، ويبني الواجهة، ويعيد تشغيل `khfdesign-api` في pm2.
 
 إعدادات nginx موجودة في `deploy/nginx-khfdesign.conf`.
+
+### تخزين الصور والملفات
+
+كل الملفات تُحفظ على السيرفر في المجلد `UPLOADS_DIR`:
+
+- `public/images/…`: صور الموقع. تُحوَّل تلقائياً إلى WebP بعرض أقصى 2000px، وتُعرض على `/uploads/…`.
+- `private/quotes/…`: ملفات العملاء (DXF / STL …). لا تُعرض للعامة، ويحمّلها المدير فقط من لوحة التحكم.
+
+⚠️ هذا المجلد خارج git، فخذ منه نسخة احتياطية دورياً، مثلاً عبر Snapshots في لوحة هوستينجر.
+
+لنقل الصور القديمة من Cloudinary إلى السيرفر:
+
+```bash
+cd /var/www/khfdesign/backEnd && npm run migrate:images -- --dry-run   # تجربة فقط
+cd /var/www/khfdesign/backEnd && npm run migrate:images                # تنفيذ فعلي
+```
 
 ## الاختبارات وCI
 

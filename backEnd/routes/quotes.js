@@ -24,6 +24,7 @@ const upload = multer({
 
 router.post('/', optionalAuth, quoteLimiter, upload.single('file'), quoteValidation, controller.createQuote);
 router.get('/', ...admin, controller.getQuotes);
+router.get('/:id/file', ...admin, idParam(), controller.downloadQuoteFile);
 router.patch('/:id', ...admin, idParam(), quoteStatusValidation, controller.updateQuote);
 router.delete('/:id', ...admin, idParam(), controller.deleteQuote);
 

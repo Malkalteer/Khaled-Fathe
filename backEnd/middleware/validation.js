@@ -18,8 +18,8 @@ const httpsUrl = (field, label) =>
   body(field)
     .isString()
     .trim()
-    .isURL({ protocols: ["https"], require_protocol: true })
-    .withMessage(`${label} يجب أن يكون رابط https صالحاً`)
+    .isURL({ protocols: ["http", "https"], require_protocol: true, require_tld: false })
+    .withMessage(`${label} يجب أن يكون رابطاً صالحاً`)
     .isLength({ max: 1000 });
 
 exports.handleValidation = handleValidation;
