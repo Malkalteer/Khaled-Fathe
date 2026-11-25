@@ -2,7 +2,7 @@ const path = require('path');
 const QuoteRequest = require('../models/QuoteRequest');
 const Project = require('../models/Project');
 const HttpError = require('../utils/httpError');
-const { uploadBuffer } = require('../services/cloudinary');
+const { savePrivateFile, resolvePrivateFile, deletePrivateFile } = require('../services/storage');
 const { getUserId } = require('../services/productStats');
 
 exports.ALLOWED_EXTENSIONS = ['.dxf', '.stl', '.dwg', '.svg', '.pdf', '.step', '.stp', '.obj', '.ai', '.eps', '.png', '.jpg', '.jpeg'];
@@ -19,15 +19,8 @@ exports.createQuote = async (req, res) => {
 
   let file = undefined;
   if (req.file) {
-    const ext = path.extname(req.file.originalname).toLowerCase();
-    const result = await uploadBuffer(req.file.buffer, {
-      folder: 'khaled-designs/quotes',
-      resource_type: 'raw',
-      use_filename: true,
-      unique_filename: true,
-      filename_override: path.basename(req.file.originalname, ext).replace(/[^\w؀-ۿ-]+/g, '_').slice(0, 60) + ext,
-    });
-    file = { url: result.secure_url, name: req.file.originalname.slice(0, 200), size: req.file.size, publicId: result.public_id };
+    const storedPath = await savePrivateFile(req.file.buffer, req.file.originalname);
+    file = { path: storedPath, name: path.basename(req.file.originalname).slice(0, 200), size: req.file.size };
   }
 
   const quote = await QuoteRequest.create({
@@ -39,6 +32,11 @@ exports.createQuote = async (req, res) => {
     user: getUserId(req),
     file,
   });
+  if (file) {
+    // رابط التحميل يمر عبر الخادم ويتطلب صلاحية المدير
+    quote.file.url = `/api/quotes/${quote._id}/file`;
+    await quote.save();
+  }
   res.status(201).json({ message: 'تم استلام طلبك، سنتواصل معك قريباً', id: quote._id });
 };
 
@@ -59,5 +57,17 @@ exports.updateQuote = async (req, res) => {
 exports.deleteQuote = async (req, res) => {
   const deleted = await QuoteRequest.findByIdAndDelete(req.params.id);
   if (!deleted) throw new HttpError(404, 'الطلب غير موجود');
+  await deletePrivateFile(deleted.file && deleted.file.path);
   res.json({ success: true });
+};
+
+// GET /api/quotes/:id/file — تحميل ملف العميل (للمدير فقط)
+exports.downloadQuoteFile = async (req, res) => {
+  const quote = await QuoteRequest.findById(req.params.id).select('file').lean();
+  if (!quote || !quote.file || !quote.file.path) throw new HttpError(404, 'الملف غير موجود');
+  const full = resolvePrivateFile(quote.file.path);
+  res.set('X-Content-Type-Options', 'nosniff');
+  res.download(full, quote.file.name || path.basename(full), { dotfiles: 'deny' }, (err) => {
+    if (err && !res.headersSent) res.status(404).json({ message: 'الملف غير موجود على السيرفر' });
+  });
 };

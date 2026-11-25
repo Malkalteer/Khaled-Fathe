@@ -10,6 +10,9 @@ cd "$APP_DIR"
 echo "==> سحب آخر التعديلات من $BRANCH"
 git pull --ff-only origin "$BRANCH"
 
+echo "==> التأكد من مجلد الملفات المرفوعة"
+mkdir -p "${UPLOADS_DIR:-/var/www/khfdesign-uploads}"
+
 echo "==> تثبيت حزم الخادم"
 cd "$APP_DIR/backEnd"
 npm ci --omit=dev

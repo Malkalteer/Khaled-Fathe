@@ -8,6 +8,7 @@ const helmet = require("helmet");
 const { verifyRequestOrigin, getAllowedOrigins } = require("./middleware/auth");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 const { sitemap } = require("./controllers/sitemapController");
+const { publicDir } = require("./services/storage");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -41,6 +42,15 @@ app.use("/api/chat", require("./routes/chat"));
 app.use("/api/quotes", require("./routes/quotes"));
 app.use("/api/admin", require("./routes/admin"));
 app.get("/sitemap.xml", sitemap);
+
+// الصور المرفوعة (محفوظة على السيرفر). أسماؤها عشوائية ولا تتغير، لذلك تُخزَّن في المتصفح لمدة سنة.
+app.use("/uploads", express.static(publicDir(), {
+  index: false,
+  dotfiles: "deny",
+  immutable: true,
+  maxAge: "365d",
+  setHeaders: (response) => response.set("X-Content-Type-Options", "nosniff")
+}));
 
 app.get("/health", (req, res) => {
   res.json({ server: "ok", dbState: mongoose.connection.readyState });

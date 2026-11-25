@@ -11,7 +11,8 @@ const QuoteRequestSchema = new mongoose.Schema({
     url: { type: String, default: '' },
     name: { type: String, default: '' },
     size: { type: Number, default: 0 },
-    publicId: { type: String, default: '' },
+    // المسار داخل UPLOADS_DIR/private (لا يُرسل للعامة)
+    path: { type: String, default: '' },
   },
   status: {
     type: String,
