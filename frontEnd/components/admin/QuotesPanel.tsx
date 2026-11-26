@@ -26,7 +26,7 @@ const QuoteCard: React.FC<{
 }> = ({ quote, onUpdate, onDelete }) => {
   const [note, setNote] = useState(quote.adminNote || '');
   const waNumber = quote.phone.replace(/\D/g, '');
-  const waText = `مرحباً ${quote.name}، معك فريق المهندس خالد بخصوص طلب عرض السعر الذي أرسلته${quote.product ? ` لـ "${quote.product.title}"` : ''}.`;
+  const waText = `مرحباً ${quote.name}، معك فريق المهندس خالد بخصوص رسالتك${quote.product ? ` لـ "${quote.product.title}"` : ''}.`;
 
   return (
     <article className={`card p-5 ${quote.status === 'new' ? 'border-r-4 border-r-red-400' : ''}`}>
@@ -146,7 +146,7 @@ const QuotesPanel: React.FC = () => {
 
   return (
     <div>
-      <PageHeader title="طلبات عرض السعر" description="الطلبات وملفات التصميم (DXF / STL ...) التي يرسلها العملاء من صفحة «اطلب عرض سعر»." />
+      <PageHeader title="رسائل العملاء" description="الرسائل وملفات التصميم (DXF / STL ...) التي يرسلها العملاء من صفحة «تواصل معنا»." />
 
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center">
         <div className="flex gap-2 overflow-x-auto">
@@ -170,7 +170,7 @@ const QuotesPanel: React.FC = () => {
       {loading ? (
         <ListSkeleton />
       ) : shown.length === 0 ? (
-        <EmptyState icon={<FileText size={26} />} title="لا توجد طلبات" description="عندما يرسل عميل ملف تصميم من صفحة «اطلب عرض سعر» سيظهر هنا." />
+        <EmptyState icon={<FileText size={26} />} title="لا توجد رسائل" description="عندما يرسل عميل رسالة من صفحة «تواصل معنا» ستظهر هنا." />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           {shown.map((q) => <QuoteCard key={q._id} quote={q} onUpdate={update} onDelete={remove} />)}

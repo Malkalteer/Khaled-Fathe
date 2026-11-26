@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ArrowRight, ChevronLeft, ChevronRight, FileUp, MessageCircle, Share2, ShoppingCart } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Flame, Share2, ShoppingBag, ShoppingCart } from 'lucide-react';
 import { api, Project, categoryIdOf, categoryNameOf } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { ProductRating } from './ProductRating';
 import { useToast } from './ui/Toast';
-import { productUrl, quoteMessageForProduct, whatsappLink } from '../lib/whatsapp';
+import { productUrl } from '../lib/whatsapp';
+import { formatPrice } from '../lib/format';
 
 const ProductPage: React.FC = () => {
   const { id = '' } = useParams<{ id: string }>();
@@ -82,6 +83,8 @@ const ProductPage: React.FC = () => {
       /* المستخدم ألغى المشاركة */
     }
   };
+
+  const cartItem = { _id: project._id, title: project.title, image: images[0] || '', category: categoryName, price: project.price, averageRating: project.averageRating };
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -174,9 +177,10 @@ const ProductPage: React.FC = () => {
               <span className="self-start bg-primary-100 text-primary-700 dark:bg-primary-950 dark:text-primary-300 px-3 py-1 rounded-full text-xs font-semibold mb-3">{categoryName}</span>
             )}
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-3">{project.title}</h1>
-            {Number(project.price) > 0 && (
-              <div className="text-3xl font-black text-gray-900 dark:text-white mb-4">{Number(project.price).toFixed(2)} $</div>
+            {project.bestSeller && (
+              <span className="self-start mb-3 inline-flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white"><Flame size={13} /> الأكثر مبيعاً</span>
             )}
+            <div className={`mb-4 ${Number(project.price) > 0 ? 'text-3xl font-black text-gray-900 dark:text-white' : 'text-xl font-bold text-gray-500 dark:text-gray-400'}`}>{formatPrice(project.price)}</div>
             <ProductRating productId={project._id} initial={project} />
 
             <dl className="mt-6 space-y-4 text-sm">
@@ -209,25 +213,15 @@ const ProductPage: React.FC = () => {
             {project.description && <p className="mt-6 text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">{project.description}</p>}
 
             <div className="mt-8 grid gap-2">
-              <a
-                href={whatsappLink(quoteMessageForProduct({ ...project, categoryName }))}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-600/20 transition"
+              <button
+                onClick={() => addToCart(cartItem, { open: true })}
+                className="flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-lg font-bold py-3.5 rounded-xl shadow-lg shadow-primary-600/20 transition"
               >
-                <MessageCircle size={18} /> اطلب عرض سعر عبر واتساب
-              </a>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => addToCart({ _id: project._id, title: project.title, image: images[0] || '', category: categoryName, averageRating: project.averageRating })}
-                  className="btn-primary py-3"
-                >
-                  <ShoppingCart size={16} /> أضف للسلة
-                </button>
-                <Link to={`/quote?product=${project._id}`} className="btn-secondary py-3">
-                  <FileUp size={16} /> أرسل ملف تصميم
-                </Link>
-              </div>
+                <ShoppingBag size={20} /> شراء
+              </button>
+              <button onClick={() => addToCart(cartItem)} className="btn-secondary py-3">
+                <ShoppingCart size={16} /> أضف للسلة
+              </button>
               <div className="grid grid-cols-2 gap-2">
                 <button onClick={share} className="btn-ghost">
                   <Share2 size={16} /> مشاركة

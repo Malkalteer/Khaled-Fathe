@@ -80,3 +80,14 @@ describe('projects & categories', () => {
     expect(res.text).toContain(`/portfolio/${visible.category}`);
   });
 });
+
+describe('best sellers', () => {
+  test('admin can flag a project as best seller and it is returned publicly', async () => {
+    const project = await createProject();
+    const admin = await login(await createUser({ isAdmin: true }));
+    expect((await request(app).patch(`/api/projects/${project._id}/best-seller`).send({ bestSeller: true })).status).toBe(401);
+    const res = await admin.patch(`/api/projects/${project._id}/best-seller`).send({ bestSeller: true });
+    expect(res.status).toBe(200);
+    expect((await request(app).get('/api/projects')).body[0].bestSeller).toBe(true);
+  });
+});

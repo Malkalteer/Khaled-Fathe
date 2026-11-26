@@ -1,19 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Layers } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Flame, Store } from 'lucide-react';
 import { api, Category, Project, categoryIdOf } from '../services/api';
 import ProductCard from './ProductCard';
 
+const BEST_SELLERS_LIMIT = 6;
+
+/** قسم «المتجر» في الصفحة الرئيسية: الأكثر مبيعاً ثم الفئات */
 const Portfolio: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
-    // طلبان فقط: الإحصائيات تأتي مع قائمة الأعمال نفسها
-    Promise.all([api.getCategories(), api.getProjects()])
+    // طلبان فقط: الإحصائيات تأتي مع قائمة المنتجات نفسها
+    Promise.all([api.getCategoryList(), api.getProjects()])
       .then(([cats, projs]) => {
         if (cancelled) return;
         setCategories(cats);
@@ -26,117 +28,96 @@ const Portfolio: React.FC = () => {
     };
   }, []);
 
-  const isProjectInCategory = (project: Project, categoryId: string) => categoryIdOf(project) === categoryId;
+  // المنتجات التي حددها المدير «الأكثر مبيعاً»، وإن لم يحدد شيئاً: الأعلى تقييماً ثم الأكثر إضافة للمفضلة
+  const bestSellers = useMemo(() => {
+    const flagged = projects.filter((p) => p.bestSeller);
+    if (flagged.length > 0) return flagged.slice(0, BEST_SELLERS_LIMIT);
+    return [...projects]
+      .sort((a, b) => (b.averageRating ?? 0) - (a.averageRating ?? 0) || (b.favorites ?? 0) - (a.favorites ?? 0) || (b.votes ?? 0) - (a.votes ?? 0))
+      .slice(0, BEST_SELLERS_LIMIT);
+  }, [projects]);
 
-// الخادم يعيد الأعمال بالترتيب الذي حدده المدير من لوحة التحكم
-const sortedProjects = projects;
+  const countByCategory = useMemo(() => {
+    const map: Record<string, number> = {};
+    projects.forEach((p) => {
+      const id = categoryIdOf(p);
+      map[id] = (map[id] || 0) + 1;
+    });
+    return map;
+  }, [projects]);
 
-const mainPageProjects = categories.map(cat => {
-  return sortedProjects.find(project => isProjectInCategory(project, cat._id));
-}).filter((p): p is Project => p !== undefined);
-
-const rankedProjects = [...mainPageProjects].sort((a, b) => {
-  const aScore = Number(a.averageRating ?? 0);
-  const bScore = Number(b.averageRating ?? 0);
-  return bScore - aScore;
-});
-
-  // دالة الانتقال للمسار الجديد عند الضغط على الكاتيجوري
-  const handleCategoryClick = (categoryId: string) => {
-    navigate(`/portfolio/${categoryId}`);
-  };
+  const categoryName = (p: Project) => categories.find((c) => c._id === categoryIdOf(p))?.name;
 
   return (
     <section id="portfolio" className="scroll-mt-28 py-20 bg-gray-50 dark:bg-dark-bg transition-colors duration-300">
       <div className="container mx-auto px-6">
-
-        {/* Section Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 flex items-center justify-center gap-3">
-            <Layers className="text-primary-600" />
-            معرض الأعمال
+            <Store className="text-primary-600" />
+            المتجر
           </h2>
           <div className="w-24 h-1 bg-primary-600 mx-auto rounded-full"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            جولة في أحدث مشاريعنا الهندسية. اضغط على أي فئة للانتقال لصفحة المنتجات الخاصة بها.
-          </p>
         </div>
 
-        {/* ===== قسم الفئات المفلترة العلوية ===== */}
-        <style>{`
-          .hide-scroll::-webkit-scrollbar { display: none; }
-          @keyframes scroll-hint {
-            0%   { transform: translateX(0); }
-            20%  { transform: translateX(-20px); }
-            40%  { transform: translateX(16px); }
-            60%  { transform: translateX(-10px); }
-            80%  { transform: translateX(6px); }
-            100% { transform: translateX(0); }
-          }
-          @media (max-width: 1023px) {
-            .categories-inner { animation: scroll-hint 2.5s ease-in-out 0.8s infinite both; }
-          }
-        `}</style>
-
-        <div
-          className="overflow-x-auto mb-12 py-4 px-2 hide-scroll"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          <div className="categories-inner flex gap-6 snap-x w-max mx-auto">
-            {categories.map((cat) => (
-              <div
-                key={cat._id}
-                onClick={() => handleCategoryClick(cat._id)}
-                className="group cursor-pointer flex flex-col items-center transition-all duration-300 flex-shrink-0 snap-center min-w-[88px] opacity-80 hover:opacity-100 hover:scale-105"
-              >
-                <div className="relative w-20 h-20 mb-3 rounded-2xl overflow-hidden border-2 border-transparent bg-gray-100 dark:bg-gray-800 group-hover:border-primary-600 transition-all duration-300">
-                  <img
-                    src={cat.image}
-                    alt={cat.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                </div>
-                <span className="text-sm font-bold text-gray-500 dark:text-gray-400 group-hover:text-primary-600 transition-colors">
-                  {cat.name}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ===== شبكة المشاريع (منتج ممثل واحد لكل فئة) ===== */}
         {loading ? (
           <div className="flex justify-center items-center py-20">
             <div className="w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
-        ) : mainPageProjects.length === 0 ? (
-          <div className="text-center text-gray-400 py-20 text-lg">لا توجد مشاريع متاحة حالياً</div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {rankedProjects.map((project, index) => {
-              const projectCat = categories.find(c => isProjectInCategory(project, c._id));
-              return (
-                <ProductCard
-                  key={project._id}
-                  project={project}
-                  index={index}
-                  categoryName={projectCat?.name}
-                  footer={projectCat && (
-                    <button
-                      onClick={() => handleCategoryClick(projectCat._id)}
-                      className="mt-3 w-full text-center text-sm font-semibold text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-900/50 hover:bg-primary-600 hover:text-white py-2 rounded-xl transition duration-300"
-                    >
-                      عرض كافة مشاريع {projectCat.name}
-                    </button>
-                  )}
-                />
-              );
-            })}
-          </div>
-        )}
+          <>
+            {/* ===== الأكثر مبيعاً ===== */}
+            {bestSellers.length > 0 && (
+              <div id="best-sellers">
+                <h3 className="mb-6 flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white">
+                  <Flame className="text-amber-500" /> الأكثر مبيعاً
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {bestSellers.map((project, index) => (
+                    <ProductCard key={project._id} project={project} index={index} categoryName={categoryName(project)} />
+                  ))}
+                </div>
+              </div>
+            )}
 
+            {/* ===== الفاصل ===== */}
+            <div className="my-14 flex items-center gap-4" role="separator">
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-gray-300 dark:to-gray-700" />
+              <p className="max-w-2xl text-center text-gray-600 dark:text-gray-400">
+                جولة في أحدث مشاريعنا الهندسية. اضغط على أي فئة للانتقال لصفحة المنتجات الخاصة بها.
+              </p>
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-gray-300 dark:to-gray-700" />
+            </div>
+
+            {/* ===== الفئات: صور بنسبة 1080×1350 (4:5) ===== */}
+            {categories.length === 0 ? (
+              <div className="text-center text-gray-400 py-10 text-lg">لا توجد فئات حالياً</div>
+            ) : (
+              <div id="categories" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {categories.map((cat, index) => (
+                  <Link
+                    key={cat._id}
+                    to={`/portfolio/${cat._id}`}
+                    className="group relative block aspect-[4/5] overflow-hidden rounded-2xl bg-gray-200 dark:bg-gray-800 shadow-lg animate-card-in"
+                    style={{ animationDelay: `${Math.min(index * 70, 420)}ms` }}
+                  >
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 p-4 md:p-5">
+                      <h3 className="text-lg md:text-2xl font-bold text-white">{cat.name}</h3>
+                      <span className="text-xs md:text-sm text-white/80">{countByCategory[cat._id] || 0} منتج</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </section>
   );

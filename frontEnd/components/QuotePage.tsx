@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { CheckCircle2, FileUp, Loader2, X } from 'lucide-react';
+import { CheckCircle2, FileUp, Loader2, MessageCircle, X } from 'lucide-react';
 import { api, Project } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { SITE_URL } from '../lib/config';
+import { whatsappLink } from '../lib/whatsapp';
 
 const ACCEPT = '.dxf,.stl,.dwg,.svg,.pdf,.step,.stp,.obj,.ai,.eps,.png,.jpg,.jpeg';
 const MAX_MB = 25;
@@ -43,7 +44,7 @@ const QuotePage: React.FC = () => {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!file && !message.trim()) return setError('أرفق ملف التصميم أو اكتب وصفاً للمشروع');
+    if (!file && !message.trim()) return setError('اكتب رسالتك أو أرفق ملف تصميم');
     const form = new FormData();
     form.append('name', name.trim());
     form.append('phone', phone.trim());
@@ -67,11 +68,11 @@ const QuotePage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center px-6" dir="rtl">
         <div className="card max-w-md w-full p-8 text-center">
           <CheckCircle2 className="mx-auto h-14 w-14 text-emerald-500" />
-          <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">تم استلام طلبك</h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">سيراجع فريق المهندس خالد ملفك ويتواصل معك على الرقم {phone} قريباً.</p>
+          <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">تم استلام رسالتك</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">سيتواصل معك فريق المهندس خالد على الرقم {phone} قريباً.</p>
           <div className="mt-6 flex justify-center gap-2">
             <Link to="/" className="btn-primary">العودة للرئيسية</Link>
-            <button onClick={() => { setDone(false); setFile(null); setMessage(''); }} className="btn-secondary">طلب آخر</button>
+            <button onClick={() => { setDone(false); setFile(null); setMessage(''); }} className="btn-secondary">رسالة أخرى</button>
           </div>
         </div>
       </div>
@@ -81,16 +82,29 @@ const QuotePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg py-12 px-4" dir="rtl">
       <Helmet>
-        <title>اطلب عرض سعر | KHF Designs</title>
-        <meta name="description" content="أرسل ملف التصميم (DXF / STL / DWG) واحصل على عرض سعر لتنفيذ مشروع CNC الخاص بك." />
-        <link rel="canonical" href={`${SITE_URL}/quote`} />
+        <title>تواصل معنا | KHF Designs</title>
+        <meta name="description" content="تواصل مع فريق المهندس خالد عبر واتساب أو أرسل رسالتك وملف تصميمك (DXF / STL / DWG)." />
+        <link rel="canonical" href={`${SITE_URL}/contact`} />
       </Helmet>
       <div className="mx-auto max-w-2xl">
         <Link to="/" className="text-sm text-gray-500 hover:text-primary-600">← العودة للرئيسية</Link>
-        <h1 className="mt-3 text-3xl font-bold text-gray-900 dark:text-white">اطلب عرض سعر</h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">أرفق ملف التصميم واكتب المقاسات والخامة المطلوبة، وسنرد عليك بعرض سعر دقيق.</p>
+        <h1 className="mt-3 text-3xl font-bold text-gray-900 dark:text-white">تواصل معنا</h1>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">راسلنا مباشرة على واتساب، أو اترك رسالتك (ويمكنك إرفاق ملف تصميم) وسنرد عليك قريباً.</p>
 
-        <form onSubmit={submit} className="card mt-6 p-6 space-y-5">
+        <a
+          href={whatsappLink('مرحباً مهندس خالد 👋\nأريد الاستفسار عن ')}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-green-600 py-3.5 text-lg font-bold text-white shadow-lg shadow-green-600/20 transition hover:bg-green-700"
+        >
+          <MessageCircle size={20} /> راسلنا على واتساب
+        </a>
+
+        <div className="my-6 flex items-center gap-3 text-sm text-gray-400">
+          <span className="h-px flex-1 bg-gray-200 dark:bg-gray-800" /> أو أرسل رسالة <span className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
+        </div>
+
+        <form onSubmit={submit} className="card p-6 space-y-5">
           {product && (
             <div className="flex items-center gap-3 rounded-xl bg-primary-50 dark:bg-primary-950/40 p-3">
               {product.images?.[0] && <img src={product.images[0]} alt="" className="h-14 w-14 rounded-lg object-cover" />}
@@ -116,12 +130,12 @@ const QuotePage: React.FC = () => {
             <input id="q-email" className="field" type="email" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div>
-            <label className="field-label" htmlFor="q-msg">تفاصيل المشروع</label>
-            <textarea id="q-msg" className="field min-h-[120px]" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} placeholder="مثال: لوحة خشب MDF بسماكة 18 مم، مقاس 120×80 سم، الكمية 3 قطع" />
+            <label className="field-label" htmlFor="q-msg">رسالتك</label>
+            <textarea id="q-msg" className="field min-h-[120px]" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} placeholder="اكتب استفسارك أو تفاصيل طلبك (المقاس، الخامة، الكمية...)" />
           </div>
 
           <div>
-            <span className="field-label">ملف التصميم</span>
+            <span className="field-label">ملف تصميم (اختياري)</span>
             {file ? (
               <div className="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 p-3">
                 <FileUp className="h-8 w-8 text-primary-600" />
@@ -151,7 +165,7 @@ const QuotePage: React.FC = () => {
           {error && <p className="rounded-lg bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-600 dark:text-red-400" role="alert">{error}</p>}
 
           <button type="submit" disabled={sending} className="btn-primary w-full py-3 text-base">
-            {sending ? <><Loader2 className="animate-spin" size={18} /> جاري الإرسال...</> : 'إرسال الطلب'}
+            {sending ? <><Loader2 className="animate-spin" size={18} /> جاري الإرسال...</> : 'إرسال الرسالة'}
           </button>
         </form>
       </div>

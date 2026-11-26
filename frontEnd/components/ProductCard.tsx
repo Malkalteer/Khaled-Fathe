@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MessageCircle, ShoppingCart } from 'lucide-react';
+import { Flame, ShoppingBag, ShoppingCart } from 'lucide-react';
 import { Project } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { ProductRating } from './ProductRating';
-import { quoteMessageForProduct, whatsappLink } from '../lib/whatsapp';
+import { formatPrice } from '../lib/format';
 
 interface Props {
   project: Project;
@@ -17,6 +17,8 @@ const ProductCard: React.FC<Props> = ({ project, categoryName, index = 0, footer
   const { addToCart } = useCart();
   const image = project.images?.[0] || '';
   const url = `/project/${project._id}`;
+  const item = { _id: project._id, title: project.title, image, category: categoryName, price: project.price, averageRating: project.averageRating };
+  const hasPrice = Number(project.price) > 0;
 
   return (
     <article
@@ -25,13 +27,12 @@ const ProductCard: React.FC<Props> = ({ project, categoryName, index = 0, footer
     >
       <Link to={url} className="relative block overflow-hidden aspect-[4/3] bg-gray-100 dark:bg-gray-800" aria-label={`عرض تفاصيل ${project.title}`}>
         {image && (
-          <img
-            src={image}
-            alt={project.title}
-            loading="lazy"
-            decoding="async"
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
+          <img src={image} alt={project.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+        )}
+        {project.bestSeller && (
+          <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1 text-xs font-bold text-white shadow">
+            <Flame size={13} /> الأكثر مبيعاً
+          </span>
         )}
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <span className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold py-3 px-6 rounded-xl -translate-y-2 group-hover:translate-y-0 transition-all duration-300">
@@ -42,31 +43,30 @@ const ProductCard: React.FC<Props> = ({ project, categoryName, index = 0, footer
 
       <div className="p-5 flex flex-col flex-1">
         {categoryName && (
-          <span className="inline-block self-start bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs px-2.5 py-1 rounded-md mb-2 font-medium">
-            {categoryName}
-          </span>
+          <span className="inline-block self-start bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs px-2.5 py-1 rounded-md mb-2 font-medium">{categoryName}</span>
         )}
         <Link to={url}>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 hover:text-primary-600 transition-colors">{project.title}</h3>
         </Link>
-        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{project.description}</p>
+        <div className={`text-xl font-black ${hasPrice ? 'text-gray-900 dark:text-white' : 'text-base font-bold text-gray-500 dark:text-gray-400'}`}>
+          {formatPrice(project.price)}
+        </div>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{project.description}</p>
         <ProductRating productId={project._id} compact initial={project} />
 
         <div className="mt-auto pt-4 grid grid-cols-2 gap-2">
           <button
-            onClick={() => addToCart({ _id: project._id, title: project.title, image, category: categoryName, averageRating: project.averageRating })}
-            className="flex items-center justify-center gap-1.5 bg-primary-600 text-white text-sm font-semibold py-2.5 rounded-xl hover:bg-primary-700 transition"
+            onClick={() => addToCart(item)}
+            className="flex items-center justify-center gap-1.5 border border-primary-600 text-primary-600 dark:text-primary-400 text-sm font-semibold py-2.5 rounded-xl hover:bg-primary-50 dark:hover:bg-primary-950/40 transition"
           >
             <ShoppingCart size={16} /> أضف للسلة
           </button>
-          <a
-            href={whatsappLink(quoteMessageForProduct({ ...project, categoryName }))}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 bg-green-600 text-white text-sm font-semibold py-2.5 rounded-xl hover:bg-green-700 transition"
+          <button
+            onClick={() => addToCart(item, { open: true })}
+            className="flex items-center justify-center gap-1.5 bg-primary-600 text-white text-sm font-semibold py-2.5 rounded-xl hover:bg-primary-700 transition"
           >
-            <MessageCircle size={16} /> اطلب عرض سعر
-          </a>
+            <ShoppingBag size={16} /> شراء
+          </button>
         </div>
         {footer}
       </div>

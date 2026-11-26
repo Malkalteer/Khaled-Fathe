@@ -4,7 +4,6 @@ import { HelmetProvider } from 'react-helmet-async';
 
 import Header from './components/Header';
 import Hero from './components/Hero';
-import Skills from './components/Skills';
 import Portfolio from './components/Portfolio';
 import ChatAssistant from './components/ChatAssistant';
 import Footer from './components/Footer';
@@ -57,7 +56,6 @@ const HomePage: React.FC<ThemeProps> = ({ theme, toggleTheme }) => (
     <Header theme={theme} toggleTheme={toggleTheme} />
     <main>
       <Hero />
-      <Skills />
       <Portfolio />
       <ChatAssistant />
       <Evaluation />
@@ -80,6 +78,12 @@ const AdminRoute: React.FC<ThemeProps> = (props) => {
     );
   }
   return <AdminDashboard {...props} />;
+};
+
+/** الرابط القديم /quote أصبح /contact (مع الإبقاء على ?product=...) */
+const QuoteRedirect: React.FC = () => {
+  const { search } = useLocation();
+  return <Navigate to={`/contact${search}`} replace />;
 };
 
 function App() {
@@ -118,7 +122,8 @@ function App() {
                     <Route path="/register" element={<Register />} />
                     <Route path="/add-review" element={<ReviewForm />} />
                     <Route path="/favorites" element={<FavoritesPage />} />
-                    <Route path="/quote" element={<QuotePage />} />
+                    <Route path="/contact" element={<QuotePage />} />
+                    <Route path="/quote" element={<QuoteRedirect />} />
                     <Route path="/portfolio/:categoryId" element={<CategoryPage />} />
                     <Route path="/project/:id" element={<ProductPage />} />
                     <Route path="/admin/*" element={<AdminRoute {...themeProps} />} />

@@ -71,6 +71,7 @@ exports.projectValidation = [
   body("details").optional({ values: "null" }).isArray({ max: 50 }),
   body("details.*").isString().trim().isLength({ max: 300 }),
   body("hidden").optional().isBoolean().toBoolean(),
+  body("bestSeller").optional().isBoolean().toBoolean(),
   handleValidation
 ];
 

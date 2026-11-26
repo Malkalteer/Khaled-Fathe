@@ -25,7 +25,7 @@ const NAV = [
   { to: '/admin', label: 'نظرة عامة', icon: LayoutDashboard, end: true },
   { to: '/admin/projects', label: 'الأعمال', icon: Package, count: (s: AdminStats) => s.projects },
   { to: '/admin/categories', label: 'الفئات', icon: FolderTree, count: (s: AdminStats) => s.categories },
-  { to: '/admin/quotes', label: 'طلبات عرض السعر', icon: FileText, alert: (s: AdminStats) => s.newQuotes },
+  { to: '/admin/quotes', label: 'رسائل العملاء', icon: FileText, alert: (s: AdminStats) => s.newQuotes },
   { to: '/admin/reviews', label: 'التقييمات', icon: MessageSquareQuote, alert: (s: AdminStats) => s.pendingReviews },
   { to: '/admin/users', label: 'المستخدمون', icon: Users, count: (s: AdminStats) => s.users },
 ];

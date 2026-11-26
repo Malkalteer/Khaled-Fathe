@@ -1,10 +1,12 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useToast } from '../components/ui/Toast';
 
 export interface CartItem {
   _id: string;
   title: string;
   image: string;
   category?: string;
+  price?: number;
   averageRating?: number;
   userFavorite?: boolean;
   quantity: number;
@@ -12,7 +14,9 @@ export interface CartItem {
 
 interface CartContextValue {
   cart: CartItem[];
-  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
+  /** open=true: يفتح السلة مباشرة (زر «شراء»)، وإلا تظهر رسالة صغيرة فقط */
+  addToCart: (item: Omit<CartItem, 'quantity'>, options?: { open?: boolean }) => void;
+  total: number;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, delta: number) => void;
   clearCart: () => void;
@@ -34,6 +38,7 @@ const readCart = (): CartItem[] => {
             title: i.title || i.name || '',
             image: i.image || i.imgUrl || i.img || '',
             category: typeof i.category === 'string' ? i.category : undefined,
+            price: Number(i.price) || 0,
             averageRating: i.averageRating,
             userFavorite: i.userFavorite,
             quantity: Math.max(1, Number(i.quantity) || 1),
@@ -48,6 +53,7 @@ const readCart = (): CartItem[] => {
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>(readCart);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     try {
@@ -57,14 +63,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [cart]);
 
-  const addToCart = useCallback((item: Omit<CartItem, 'quantity'>) => {
+  const addToCart = useCallback((item: Omit<CartItem, 'quantity'>, options: { open?: boolean } = {}) => {
     setCart((prev) => {
       const exists = prev.find((i) => i._id === item._id);
-      if (exists) return prev.map((i) => (i._id === item._id ? { ...i, quantity: i.quantity + 1 } : i));
+      // في الشراء المباشر لا نزيد الكمية إذا كان المنتج موجوداً أصلاً في السلة
+      if (exists) return options.open ? prev : prev.map((i) => (i._id === item._id ? { ...i, quantity: i.quantity + 1, price: item.price ?? i.price } : i));
       return [...prev, { ...item, quantity: 1 }];
     });
-    setIsCartOpen(true);
-  }, []);
+    if (options.open) setIsCartOpen(true);
+    else toast.success(`أُضيف «${item.title}» إلى السلة`);
+  }, [toast]);
 
   const removeFromCart = useCallback((id: string) => setCart((prev) => prev.filter((i) => i._id !== id)), []);
 
@@ -80,9 +88,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const clearCart = useCallback(() => setCart([]), []);
 
+  const total = useMemo(() => cart.reduce((sum, i) => sum + (Number(i.price) || 0) * i.quantity, 0), [cart]);
+
   const value = useMemo(
-    () => ({ cart, addToCart, removeFromCart, updateQuantity, clearCart, isCartOpen, setIsCartOpen }),
-    [cart, addToCart, removeFromCart, updateQuantity, clearCart, isCartOpen]
+    () => ({ cart, addToCart, removeFromCart, updateQuantity, clearCart, isCartOpen, setIsCartOpen, total }),
+    [cart, addToCart, removeFromCart, updateQuantity, clearCart, isCartOpen, total]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

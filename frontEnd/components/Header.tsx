@@ -24,9 +24,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
   // Define Navigation Items
   const navItems = [
     { label: 'الرئيسية', id: 'home' },
-    { label: 'المهارات', id: 'skills' },
-    { label: 'أعمالي', id: 'portfolio' },
-    { label: 'الاستشارات', id: 'chat' },
+    { label: 'المتجر', id: 'portfolio' },
   ];
 
   const handleScroll = (id: string) => {
@@ -61,7 +59,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
              </button>
              
           ))}
-          <Link to="/quote" className="text-gray-600 dark:text-gray-300 hover:text-primary-500 font-medium transition-colors text-sm lg:text-base">اطلب عرض سعر</Link>
+          <Link to="/contact" className="text-gray-600 dark:text-gray-300 hover:text-primary-500 font-medium transition-colors text-sm lg:text-base">تواصل معنا</Link>
           {isAdmin && (
             <Link to="/admin" className="inline-flex items-center gap-1.5 text-sm bg-emerald-600 text-white px-3 py-1.5 rounded-md hover:bg-emerald-700">
               <LayoutDashboard size={16} /> لوحة التحكم
@@ -139,7 +137,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
                  {item.label}
                </button>
             ))}
-            <Link to="/quote" onClick={() => setIsMenuOpen(false)} className="text-right text-gray-700 dark:text-gray-300 hover:text-primary-500 font-medium py-2">اطلب عرض سعر</Link>
+            <Link to="/contact" onClick={() => setIsMenuOpen(false)} className="text-right text-gray-700 dark:text-gray-300 hover:text-primary-500 font-medium py-2">تواصل معنا</Link>
             {isAdmin && (
               <Link to="/admin" onClick={() => setIsMenuOpen(false)} className="text-right text-emerald-600 font-semibold py-2">لوحة التحكم</Link>
             )}

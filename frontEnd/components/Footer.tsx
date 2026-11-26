@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Instagram, MapPin , Mail, Phone, Facebook } from 'lucide-react';
 
 
@@ -37,10 +38,9 @@ const Footer: React.FC = () => {
             <h4 className="text-lg font-semibold mb-4 text-gray-200">روابط سريعة</h4>
             <ul className="space-y-2 text-gray-400">
               <li><button onClick={() => scrollToSection('home')} className="hover:text-primary-500 transition-colors bg-transparent border-none cursor-pointer">الرئيسية</button></li>
-              <li><button onClick={() => scrollToSection('skills')} className="hover:text-primary-500 transition-colors bg-transparent border-none cursor-pointer">من نحن</button></li>
-              <li><button onClick={() => scrollToSection('portfolio')} className="hover:text-primary-500 transition-colors bg-transparent border-none cursor-pointer">معرض الأعمال</button></li>
-              
-              <li><button onClick={() => scrollToSection('chat')} className="hover:text-primary-500 transition-colors bg-transparent border-none cursor-pointer">الاستشارات</button></li>
+              <li><button onClick={() => scrollToSection('portfolio')} className="hover:text-primary-500 transition-colors bg-transparent border-none cursor-pointer">المتجر</button></li>
+              <li><button onClick={() => scrollToSection('chat')} className="hover:text-primary-500 transition-colors bg-transparent border-none cursor-pointer">المساعد الذكي</button></li>
+              <li><Link to="/contact" className="hover:text-primary-500 transition-colors">تواصل معنا</Link></li>
             </ul>
           </div>
 

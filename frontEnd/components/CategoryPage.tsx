@@ -21,7 +21,7 @@ const CategoryPage: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    Promise.all([api.getCategories(), api.getProjects()])
+    Promise.all([api.getCategoryList(), api.getProjects()])
       .then(([cats, projs]) => {
         if (cancelled) return;
         setCategories(cats);
@@ -37,7 +37,7 @@ const CategoryPage: React.FC = () => {
   }, [categoryId]);
 
   const currentCategory = categories.find((c) => c._id === categoryId);
-  const currentCategoryName = categoryId === 'all' ? 'جميع التصاميم والمشاريع' : currentCategory?.name || (loading ? 'جاري التحميل...' : 'قسم غير موجود');
+  const currentCategoryName = categoryId === 'all' ? 'جميع المنتجات' : currentCategory?.name || (loading ? 'جاري التحميل...' : 'قسم غير موجود');
 
   const filteredProjects = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -67,14 +67,14 @@ const CategoryPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-gray-200 dark:border-gray-800 pb-6">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">{currentCategoryName}</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{filteredProjects.length} مشروع</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{filteredProjects.length} منتج</p>
           </div>
           <button
             onClick={() => navigate('/#portfolio')}
             className="flex items-center gap-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-5 py-2.5 rounded-xl shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition w-fit"
           >
             <ArrowRight size={20} />
-            <span>العودة للمعرض العام</span>
+            <span>العودة للمتجر</span>
           </button>
         </div>
 
@@ -124,7 +124,7 @@ const CategoryPage: React.FC = () => {
         ) : error ? (
           <div className="text-center text-red-500 py-20">{error}</div>
         ) : filteredProjects.length === 0 ? (
-          <div className="text-center text-gray-400 py-20 text-lg">لا توجد مشاريع مطابقة.</div>
+          <div className="text-center text-gray-400 py-20 text-lg">لا توجد منتجات مطابقة.</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProjects.map((project, index) => (
