@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, GripVertical, Package, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, Flame, GripVertical, Package, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { api, Category, Project, categoryIdOf } from '../../services/api';
 import { useConfirm } from '../ui/Dialog';
 import { useToast } from '../ui/Toast';
@@ -8,7 +8,7 @@ import { useAdmin } from './AdminDashboard';
 import ProjectEditor from './ProjectEditor';
 import { EmptyState, ListSkeleton, PageHeader, Stars, Switch } from './ui';
 
-type Visibility = 'all' | 'visible' | 'hidden';
+type Visibility = 'all' | 'visible' | 'hidden' | 'best';
 
 const ProjectsPanel: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -55,7 +55,7 @@ const ProjectsPanel: React.FC = () => {
       (p) =>
         (!q || p.title.toLowerCase().includes(q) || (p.material || '').toLowerCase().includes(q)) &&
         (!catFilter || categoryIdOf(p) === catFilter) &&
-        (visibility === 'all' || (visibility === 'hidden' ? p.hidden : !p.hidden))
+        (visibility === 'all' || (visibility === 'best' ? p.bestSeller : visibility === 'hidden' ? p.hidden : !p.hidden))
     );
   }, [projects, query, catFilter, visibility]);
 
@@ -103,6 +103,19 @@ const ProjectsPanel: React.FC = () => {
     }
   };
 
+  const toggleBestSeller = async (project: Project) => {
+    setBusyId(project._id);
+    try {
+      await api.admin.setProjectBestSeller(project._id, !project.bestSeller);
+      setProjects((list) => list.map((p) => (p._id === project._id ? { ...p, bestSeller: !project.bestSeller } : p)));
+      toast.success(project.bestSeller ? 'أُزيل من «الأكثر مبيعاً»' : 'أُضيف إلى «الأكثر مبيعاً» في الصفحة الرئيسية');
+    } catch (error) {
+      toast.error(error);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const remove = async (project: Project) => {
     const ok = await confirm({
       title: `حذف "${project.title}"؟`,
@@ -137,7 +150,7 @@ const ProjectsPanel: React.FC = () => {
     <div>
       <PageHeader
         title="الأعمال"
-        description="أضف وعدّل أعمالك، رتّبها بالسحب، وأخفِ ما لا تريد عرضه دون حذفه."
+        description="أضف وعدّل منتجاتك، رتّبها بالسحب، اختر «الأكثر مبيعاً» 🔥، وأخفِ ما لا تريد عرضه دون حذفه."
         actions={
           <button onClick={() => openEditor(null)} className="btn-primary" disabled={categories.length === 0} title={categories.length === 0 ? 'أضف فئة أولاً' : undefined}>
             <Plus size={16} /> عمل جديد
@@ -155,7 +168,7 @@ const ProjectsPanel: React.FC = () => {
           {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
         </select>
         <div className="flex rounded-lg bg-gray-100 p-1 text-sm dark:bg-gray-800" role="tablist">
-          {(['all', 'visible', 'hidden'] as Visibility[]).map((v) => (
+          {(['all', 'visible', 'hidden', 'best'] as Visibility[]).map((v) => (
             <button
               key={v}
               role="tab"
@@ -163,7 +176,7 @@ const ProjectsPanel: React.FC = () => {
               onClick={() => setVisibility(v)}
               className={`rounded-md px-3 py-1.5 font-medium transition ${visibility === v ? 'bg-white shadow dark:bg-gray-700' : 'text-gray-500'}`}
             >
-              {v === 'all' ? 'الكل' : v === 'visible' ? 'ظاهر' : 'مخفي'}
+              {v === 'all' ? 'الكل' : v === 'visible' ? 'ظاهر' : v === 'hidden' ? 'مخفي' : 'الأكثر مبيعاً'}
             </button>
           ))}
         </div>
@@ -213,6 +226,7 @@ const ProjectsPanel: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <button onClick={() => openEditor(p)} className="truncate text-right font-semibold hover:text-primary-600">{p.title}</button>
                   {p.hidden && <span className="badge bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300"><EyeOff size={11} /> مخفي</span>}
+                  {p.bestSeller && <span className="badge bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"><Flame size={11} /> الأكثر مبيعاً</span>}
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
                   <span>{catName(p)}</span>
@@ -222,6 +236,16 @@ const ProjectsPanel: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-1 sm:gap-2">
+                <button
+                  onClick={() => toggleBestSeller(p)}
+                  disabled={busyId === p._id}
+                  aria-pressed={Boolean(p.bestSeller)}
+                  className={`btn-icon ${p.bestSeller ? '!bg-amber-100 !text-amber-600 dark:!bg-amber-950 dark:!text-amber-300' : ''}`}
+                  title={p.bestSeller ? 'إزالة من الأكثر مبيعاً' : 'إضافة إلى الأكثر مبيعاً'}
+                  aria-label={p.bestSeller ? 'إزالة من الأكثر مبيعاً' : 'إضافة إلى الأكثر مبيعاً'}
+                >
+                  <Flame size={16} className={p.bestSeller ? 'fill-current' : ''} />
+                </button>
                 <Switch checked={!p.hidden} onChange={() => toggleHidden(p)} disabled={busyId === p._id} label={p.hidden ? 'إظهار في الموقع' : 'إخفاء من الموقع'} />
                 <span className="hidden w-10 text-xs text-gray-500 md:inline">{p.hidden ? <EyeOff size={14} /> : <Eye size={14} />}</span>
                 <a href={`/project/${p._id}`} target="_blank" rel="noopener noreferrer" className="btn-icon hidden sm:inline-flex" aria-label="عرض في الموقع" title="عرض في الموقع"><ExternalLink size={16} /></a>

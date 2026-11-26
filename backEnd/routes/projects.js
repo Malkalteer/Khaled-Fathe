@@ -13,6 +13,7 @@ router.get('/:id', optionalAuth, idParam(), projectController.getProject);
 router.post('/', ...admin, projectValidation, projectController.createProject);
 router.put('/:id', ...admin, idParam(), projectValidation, projectController.updateProject);
 router.patch('/:id/visibility', ...admin, idParam(), projectController.setVisibility);
+router.patch('/:id/best-seller', ...admin, idParam(), projectController.setBestSeller);
 router.delete('/:id', ...admin, idParam(), projectController.deleteProject);
 
 module.exports = router;

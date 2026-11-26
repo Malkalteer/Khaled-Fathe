@@ -16,7 +16,7 @@ exports.sitemap = async (req, res) => {
   const urls = [
     { loc: `${base}/`, changefreq: 'daily', priority: '1.0' },
     { loc: `${base}/portfolio/all`, changefreq: 'weekly', priority: '0.9' },
-    { loc: `${base}/quote`, changefreq: 'monthly', priority: '0.7' },
+    { loc: `${base}/contact`, changefreq: 'monthly', priority: '0.7' },
     ...categories.map((c) => ({ loc: `${base}/portfolio/${c._id}`, lastmod: c.updatedAt, changefreq: 'weekly', priority: '0.8' })),
     ...projects.map((p) => ({ loc: `${base}/project/${p._id}`, lastmod: p.updatedAt, changefreq: 'monthly', priority: '0.7' })),
   ];

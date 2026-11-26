@@ -110,7 +110,7 @@ const CategoriesPanel: React.FC = () => {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {categories.map((cat) => (
             <div key={cat._id} className="card group overflow-hidden">
-              <button onClick={() => openEditor(cat)} className="block aspect-video w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+              <button onClick={() => openEditor(cat)} className="block aspect-[4/5] w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
                 <img src={cat.image} alt={cat.name} loading="lazy" className="h-full w-full object-cover transition group-hover:scale-105" />
               </button>
               <div className="flex items-center gap-2 p-4">
@@ -146,6 +146,8 @@ const CategoriesPanel: React.FC = () => {
           <SingleImageUpload
             value={image}
             label="صورة الفئة"
+            hint="المقاس المثالي 1080×1350"
+            aspect="aspect-[4/5] max-w-[260px] mx-auto"
             onUpload={async (file) => {
               try {
                 setImage(await api.admin.uploadImage(file));

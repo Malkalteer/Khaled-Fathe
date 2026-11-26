@@ -23,9 +23,10 @@ type FormState = {
   details: string;
   description: string;
   hidden: boolean;
+  bestSeller: boolean;
 };
 
-const empty: FormState = { title: '', category: '', images: [], price: '', material: '', dimensions: '', details: '', description: '', hidden: false };
+const empty: FormState = { title: '', category: '', images: [], price: '', material: '', dimensions: '', details: '', description: '', hidden: false, bestSeller: false };
 
 const fromProject = (p: Project | null): FormState =>
   p
@@ -39,6 +40,7 @@ const fromProject = (p: Project | null): FormState =>
         details: (p.details || []).join('\n'),
         description: p.description || '',
         hidden: Boolean(p.hidden),
+        bestSeller: Boolean(p.bestSeller),
       }
     : empty;
 
@@ -127,6 +129,7 @@ const ProjectEditor: React.FC<Props> = ({ open, project, categories, onClose, on
       details: form.details.split('\n').map((l) => l.trim()).filter(Boolean),
       description: form.description.trim(),
       hidden: form.hidden,
+      bestSeller: form.bestSeller,
     };
     setSaving(true);
     try {
@@ -150,10 +153,16 @@ const ProjectEditor: React.FC<Props> = ({ open, project, categories, onClose, on
       title={project ? 'تعديل العمل' : 'إضافة عمل جديد'}
       footer={
         <div className="flex items-center justify-between gap-2">
-          <label className="flex items-center gap-2 text-sm">
-            <Switch checked={!form.hidden} onChange={(v) => set('hidden', !v)} label="ظاهر في الموقع" />
-            <span>{form.hidden ? 'مخفي عن الزوار' : 'ظاهر في الموقع'}</span>
-          </label>
+          <div className="flex flex-col gap-2 sm:flex-row sm:gap-5">
+            <label className="flex items-center gap-2 text-sm">
+              <Switch checked={!form.hidden} onChange={(v) => set('hidden', !v)} label="ظاهر في الموقع" />
+              <span>{form.hidden ? 'مخفي عن الزوار' : 'ظاهر في الموقع'}</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <Switch checked={form.bestSeller} onChange={(v) => set('bestSeller', v)} label="الأكثر مبيعاً" />
+              <span>الأكثر مبيعاً</span>
+            </label>
+          </div>
           <div className="flex gap-2">
             <button type="button" onClick={requestClose} className="btn-secondary">إلغاء</button>
             <button type="button" onClick={() => submit()} disabled={saving || uploading > 0} className="btn-primary min-w-[110px]">
@@ -245,7 +254,7 @@ const ProjectEditor: React.FC<Props> = ({ open, project, categories, onClose, on
           </div>
           <div>
             <label className="field-label" htmlFor="p-price">السعر ($)</label>
-            <input id="p-price" className="field" type="number" min="0" step="0.01" inputMode="decimal" dir="ltr" value={form.price} onChange={(e) => set('price', e.target.value)} placeholder="0 = عند الطلب" />
+            <input id="p-price" className="field" type="number" min="0" step="0.01" inputMode="decimal" dir="ltr" value={form.price} onChange={(e) => set('price', e.target.value)} placeholder="اتركه فارغاً = السعر عند الطلب" />
             {fieldError('price')}
           </div>
           <div className="sm:col-span-2">

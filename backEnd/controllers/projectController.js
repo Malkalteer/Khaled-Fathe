@@ -16,6 +16,7 @@ const pickProjectFields = (body) => ({
   dimensions: body.dimensions || '',
   details: Array.isArray(body.details) ? body.details.filter(Boolean) : [],
   ...(typeof body.hidden === 'boolean' ? { hidden: body.hidden } : {}),
+  ...(typeof body.bestSeller === 'boolean' ? { bestSeller: body.bestSeller } : {}),
 });
 
 const ensureCategory = async (categoryId) => {
@@ -64,6 +65,14 @@ exports.updateProject = async (req, res) => {
 exports.setVisibility = async (req, res) => {
   if (typeof req.body.hidden !== 'boolean') throw new HttpError(400, 'قيمة الإخفاء غير صالحة');
   const project = await Project.findByIdAndUpdate(req.params.id, { hidden: req.body.hidden }, { returnDocument: 'after' });
+  if (!project) throw new HttpError(404, 'العمل غير موجود');
+  res.json(project);
+};
+
+// PATCH /api/projects/:id/best-seller  { bestSeller: boolean }
+exports.setBestSeller = async (req, res) => {
+  if (typeof req.body.bestSeller !== 'boolean') throw new HttpError(400, 'قيمة غير صالحة');
+  const project = await Project.findByIdAndUpdate(req.params.id, { bestSeller: req.body.bestSeller }, { returnDocument: 'after' });
   if (!project) throw new HttpError(404, 'العمل غير موجود');
   res.json(project);
 };

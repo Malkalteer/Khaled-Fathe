@@ -82,7 +82,10 @@ export const SingleImageUpload: React.FC<{
   value: string;
   onUpload: (file: File) => Promise<void>;
   label?: string;
-}> = ({ value, onUpload, label = 'صورة' }) => {
+  hint?: string;
+  /** كلاس Tailwind للنسبة، مثل aspect-[4/5] */
+  aspect?: string;
+}> = ({ value, onUpload, label = 'صورة', hint, aspect = 'aspect-video' }) => {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [drag, setDrag] = useState(false);
@@ -99,14 +102,14 @@ export const SingleImageUpload: React.FC<{
 
   return (
     <div>
-      <span className="field-label">{label}</span>
+      <span className="field-label">{label}{hint && <span className="mr-1 text-xs font-normal text-gray-400">({hint})</span>}</span>
       <button
         type="button"
         onClick={() => input.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
         onDragLeave={() => setDrag(false)}
         onDrop={(e) => { e.preventDefault(); setDrag(false); handle(e.dataTransfer.files?.[0]); }}
-        className={`group relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition ${
+        className={`group relative flex ${aspect} w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition ${
           drag ? 'border-primary-500 bg-primary-50 dark:bg-primary-950/30' : 'border-gray-300 hover:border-primary-400 dark:border-gray-700'
         }`}
       >

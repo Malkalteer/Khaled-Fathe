@@ -11,6 +11,8 @@ const ProjectSchema = new mongoose.Schema({
   details: { type: [String], default: [] },
   // إخفاء العمل من الموقع بدلاً من حذفه
   hidden: { type: Boolean, default: false, index: true },
+  // يظهر في قسم «الأكثر مبيعاً» في الصفحة الرئيسية (يحدده المدير)
+  bestSeller: { type: Boolean, default: false, index: true },
   // ترتيب العرض (الأصغر أولاً) ويُضبط بالسحب من لوحة التحكم
   order: { type: Number, default: 0 },
 }, { timestamps: true });

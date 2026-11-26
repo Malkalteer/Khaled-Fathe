@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import img1 from '../img/hero-1.webp';
 import img2 from '../img/hero-2.webp';
 import img3 from '../img/hero-3.webp';
@@ -7,6 +8,7 @@ import img4 from '../img/hero-4.webp';
 import { Camera, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Hero: React.FC = () => {
+  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState<'left' | 'right'>('right');
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -21,7 +23,7 @@ const Hero: React.FC = () => {
       badge: '10 سنوات خبرة',
       image: img1,
       buttonText1: 'تواصل معنا',
-      buttonText2: 'أعمالي',
+      buttonText2: 'المتجر',
     },
     {
       id: 2,
@@ -30,8 +32,8 @@ const Hero: React.FC = () => {
       description: 'نلتزم بأعلى معايير الجودة في كل مشروع',
       badge: '+500 مشروع',
       image: img2,
-      buttonText1: 'شاهد الأعمال',
-      buttonText2: 'اتصل بنا',
+      buttonText1: 'تواصل معنا',
+      buttonText2: 'تسوّق الآن',
     },
     {
       id: 3,
@@ -40,8 +42,8 @@ const Hero: React.FC = () => {
       description: 'نهتم بأصغر التفاصيل لتحقيق النتيجة المثالية',
       badge: '100% رضا العملاء',
       image: img3,
-      buttonText1: 'استكشف المزيد',
-      buttonText2: 'تعرف علينا',
+      buttonText1: 'تواصل معنا',
+      buttonText2: 'تصفّح المتجر',
     },
     {
       id: 4,
@@ -50,8 +52,8 @@ const Hero: React.FC = () => {
       description: 'نستخدم أحدث برامج وتقنيات التصميم الهندسي',
       badge: 'أحدث البرامج',
       image: img4,
-      buttonText1: 'اطلب عرض',
-      buttonText2: 'زر معرض الأعمال',
+      buttonText1: 'تواصل معنا',
+      buttonText2: 'زر المتجر',
     },
   ];
 
@@ -180,7 +182,7 @@ return (
 
             <div className="flex flex-col sm:flex-row flex-wrap justify-center lg:justify-start gap-3 sm:gap-4 mt-8 sm:mt-10">
               <button
-                onClick={() => scrollToSection('contact')}
+                onClick={() => navigate('/contact')}
                 className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-full font-semibold transition-all shadow-lg hover:shadow-primary-500/30 active:scale-95"
               >
                 {slide.buttonText1}

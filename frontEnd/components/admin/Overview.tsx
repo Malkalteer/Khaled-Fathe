@@ -42,7 +42,7 @@ const Overview: React.FC = () => {
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard to="/admin/quotes" label="طلبات عرض السعر" value={stats.quotes} hint={stats.newQuotes ? <span className="font-semibold text-red-500">{stats.newQuotes} طلب جديد</span> : 'لا طلبات جديدة'} icon={<FileText size={20} />} tone="bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-300" />
+            <StatCard to="/admin/quotes" label="رسائل العملاء" value={stats.quotes} hint={stats.newQuotes ? <span className="font-semibold text-red-500">{stats.newQuotes} رسالة جديدة</span> : 'لا رسائل جديدة'} icon={<FileText size={20} />} tone="bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-300" />
             <StatCard to="/admin/reviews" label="التقييمات" value={stats.reviews} hint={stats.pendingReviews ? <span className="font-semibold text-red-500">{stats.pendingReviews} بانتظار الموافقة</span> : `متوسط ${stats.averageReview || '—'} / 5`} icon={<MessageSquareQuote size={20} />} tone="bg-yellow-100 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-300" />
             <StatCard to="/admin/projects" label="الأعمال" value={stats.projects} hint={stats.hiddenProjects ? <span className="inline-flex items-center gap-1"><EyeOff size={12} /> {stats.hiddenProjects} مخفي</span> : 'كلها ظاهرة'} icon={<Package size={20} />} tone="bg-sky-100 text-sky-600 dark:bg-sky-950 dark:text-sky-300" />
             <StatCard to="/admin/users" label="المستخدمون" value={stats.users} hint={`+${stats.newUsers} هذا الأسبوع`} icon={<Users size={20} />} tone="bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300" />
@@ -54,11 +54,11 @@ const Overview: React.FC = () => {
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
             <section className="card">
               <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-800">
-                <h2 className="font-bold">أحدث طلبات عرض السعر</h2>
+                <h2 className="font-bold">أحدث رسائل العملاء</h2>
                 <Link to="/admin/quotes" className="inline-flex items-center gap-1 text-sm text-primary-600">الكل <ArrowLeft size={14} /></Link>
               </div>
               {stats.latestQuotes.length === 0 ? (
-                <p className="px-5 py-8 text-center text-sm text-gray-500">لا توجد طلبات بعد</p>
+                <p className="px-5 py-8 text-center text-sm text-gray-500">لا توجد رسائل بعد</p>
               ) : (
                 <ul className="divide-y divide-gray-100 dark:divide-gray-800">
                   {stats.latestQuotes.map((q) => (

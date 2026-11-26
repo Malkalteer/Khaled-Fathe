@@ -26,6 +26,7 @@ export interface Project extends ProductStats {
   dimensions?: string;
   details?: string[];
   hidden?: boolean;
+  bestSeller?: boolean;
   order?: number;
   createdAt?: string;
 }
@@ -109,13 +110,9 @@ const toPayload = (proj: ProjectInput) => ({
   dimensions: proj.dimensions || '',
   details: (proj.details || []).filter(Boolean),
   hidden: Boolean(proj.hidden),
+  bestSeller: Boolean(proj.bestSeller),
 });
 
-export const ALL_CATEGORY: Category = {
-  _id: 'all',
-  name: 'الكل',
-  image: 'https://static.vecteezy.com/system/resources/thumbnails/006/201/197/small_2x/cnc-computer-numerical-control-icon-vector.jpg',
-};
 
 export const api = {
   // ---------- Auth ----------
@@ -127,10 +124,7 @@ export const api = {
   me: () => apiFetch<{ user: User }>('/api/auth/me'),
 
   // ---------- Content ----------
-  /** الفئات الحقيقية فقط (بدون "الكل") */
   getCategoryList: () => apiFetch<Category[]>('/api/categories'),
-  /** الفئات مع "الكل" في البداية (للمعرض العام) */
-  getCategories: async () => [ALL_CATEGORY, ...(await apiFetch<Category[]>('/api/categories'))],
   getProjects: () => apiFetch<Project[]>('/api/projects'),
   getProject: (id: string) => apiFetch<Project>(`/api/projects/${id}`),
 
@@ -160,6 +154,8 @@ export const api = {
       apiFetch<Project>(`/api/projects/${id}`, { method: 'PUT', body: toPayload(proj) }),
     setProjectHidden: (id: string, hidden: boolean) =>
       apiFetch<Project>(`/api/projects/${id}/visibility`, { method: 'PATCH', body: { hidden } }),
+    setProjectBestSeller: (id: string, bestSeller: boolean) =>
+      apiFetch<Project>(`/api/projects/${id}/best-seller`, { method: 'PATCH', body: { bestSeller } }),
     reorderProjects: (ids: string[]) => apiFetch('/api/projects/reorder', { method: 'PUT', body: { ids } }),
     deleteProject: (id: string) => apiFetch(`/api/projects/${id}`, { method: 'DELETE' }),
 
