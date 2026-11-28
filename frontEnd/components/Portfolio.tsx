@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Flame, Store } from 'lucide-react';
-import { api, Category, Project, categoryIdOf } from '../services/api';
+import { api, Category, Project, categoryIdOf, categoryIdsOf } from '../services/api';
 import ProductCard from './ProductCard';
 
 const BEST_SELLERS_LIMIT = 6;
@@ -39,10 +39,9 @@ const Portfolio: React.FC = () => {
 
   const countByCategory = useMemo(() => {
     const map: Record<string, number> = {};
-    projects.forEach((p) => {
-      const id = categoryIdOf(p);
+    projects.forEach((p) => categoryIdsOf(p).forEach((id) => {
       map[id] = (map[id] || 0) + 1;
-    });
+    }));
     return map;
   }, [projects]);
 

@@ -58,7 +58,7 @@ export const ProductRating: React.FC<Props> = ({ productId, compact = false, ini
   const visibleStars = hoverValue || stats.userRating || Math.round(stats.averageRating) || 0;
 
   return (
-    <div className={`flex ${compact ? 'items-center justify-start gap-2' : 'flex-col items-start gap-2'} mt-3`}>
+    <div className={`flex ${compact ? 'flex-wrap items-center justify-start gap-x-2 gap-y-1' : 'flex-col items-start gap-2'} mt-3`}>
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1" dir="ltr" onMouseLeave={() => setHoverValue(0)}>
           {[1, 2, 3, 4, 5].map((star) => {
@@ -103,7 +103,7 @@ export const ProductRating: React.FC<Props> = ({ productId, compact = false, ini
         </button>
       </div>
 
-      <div className="flex items-center gap-2 text-[11px] text-gray-500 dark:text-gray-400">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400">
         <span>{stats.votes > 0 ? `${formatAverage(stats.averageRating)} / 5` : 'لا توجد تقييمات'}</span>
         <span className="text-yellow-500">•</span>
         <span>{stats.votes} {stats.votes === 1 ? 'صوت' : 'أصوات'}</span>

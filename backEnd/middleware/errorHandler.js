@@ -22,6 +22,11 @@ exports.errorHandler = (err, req, res, next) => {
     const message = err.code === "LIMIT_FILE_SIZE" ? "حجم الملف أكبر من المسموح" : "تعذر رفع الملف";
     return res.status(400).json({ message });
   }
+  if (err && err.code === 11000) {
+    const field = Object.keys(err.keyPattern || {})[0];
+    const messages = { code: "كود المنتج مستخدم لمنتج آخر", email: "البريد الإلكتروني مستخدم مسبقاً" };
+    return res.status(409).json({ message: messages[field] || "القيمة مستخدمة مسبقاً" });
+  }
   if (err && err.message === "Origin غير مسموح") {
     return res.status(403).json({ message: "طلب غير صالح" });
   }

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowRight, Search } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
-import { api, Category, Project, categoryIdOf, categoryNameOf } from '../services/api';
+import { api, Category, Project, categoryNameOf, inCategory } from '../services/api';
 import ProductCard from './ProductCard';
 import { SITE_URL } from '../lib/config';
 
@@ -43,8 +43,8 @@ const CategoryPage: React.FC = () => {
     const q = query.trim().toLowerCase();
     const list = projects.filter(
       (p) =>
-        (categoryId === 'all' || categoryIdOf(p) === categoryId) &&
-        (!q || p.title.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q) || (p.material || '').toLowerCase().includes(q))
+        (categoryId === 'all' || inCategory(p, categoryId)) &&
+        (!q || p.title.toLowerCase().includes(q) || (p.code || '').toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q) || (p.material || '').toLowerCase().includes(q))
     );
     const sorted = [...list];
     if (sort === 'rating') sorted.sort((a, b) => (b.averageRating ?? 0) - (a.averageRating ?? 0));
@@ -98,7 +98,7 @@ const CategoryPage: React.FC = () => {
           <div className="flex gap-2">
             <label className="relative flex-1 lg:w-64">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ابحث بالاسم أو المادة..." className="field pr-9" aria-label="بحث" />
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ابحث بالاسم أو الكود أو المادة..." className="field pr-9" aria-label="بحث" />
             </label>
             <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className="field w-auto" aria-label="ترتيب">
               <option value="rating">الأعلى تقييماً</option>
@@ -128,7 +128,7 @@ const CategoryPage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProjects.map((project, index) => (
-              <ProductCard key={project._id} project={project} index={index} categoryName={categoryNameOf(project, categories)} />
+              <ProductCard key={project._id} project={project} index={index} categoryName={categoryId !== 'all' && inCategory(project, categoryId) ? categories.find((c) => c._id === categoryId)?.name : categoryNameOf(project, categories)} />
             ))}
           </div>
         )}

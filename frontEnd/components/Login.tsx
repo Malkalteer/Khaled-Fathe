@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import GoogleSignIn from './GoogleSignIn';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -53,6 +54,7 @@ const Login: React.FC = () => {
             {loading ? <><Loader2 className="animate-spin" size={18} /> جاري الدخول...</> : 'دخول'}
           </button>
         </form>
+        <GoogleSignIn redirectTo={from} />
         <p className="text-sm mt-5 text-gray-600 dark:text-gray-300">
           ليس لديك حساب؟ <Link to="/register" className="text-primary-600 font-semibold">سجل الآن</Link>
         </p>

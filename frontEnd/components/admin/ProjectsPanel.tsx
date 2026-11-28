@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, Flame, GripVertical, Package, Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import { api, Category, Project, categoryIdOf } from '../../services/api';
+import { api, Category, Project, categoryIdOf, categoryIdsOf, inCategory } from '../../services/api';
 import { useConfirm } from '../ui/Dialog';
 import { useToast } from '../ui/Toast';
 import { useAdmin } from './AdminDashboard';
@@ -53,13 +53,13 @@ const ProjectsPanel: React.FC = () => {
     const q = query.trim().toLowerCase();
     return projects.filter(
       (p) =>
-        (!q || p.title.toLowerCase().includes(q) || (p.material || '').toLowerCase().includes(q)) &&
-        (!catFilter || categoryIdOf(p) === catFilter) &&
+        (!q || p.title.toLowerCase().includes(q) || (p.code || '').toLowerCase().includes(q) || (p.material || '').toLowerCase().includes(q)) &&
+        (!catFilter || inCategory(p, catFilter)) &&
         (visibility === 'all' || (visibility === 'best' ? p.bestSeller : visibility === 'hidden' ? p.hidden : !p.hidden))
     );
   }, [projects, query, catFilter, visibility]);
 
-  const catName = (p: Project) => categories.find((c) => c._id === categoryIdOf(p))?.name || '—';
+  const catName = (p: Project) => categoryIdsOf(p).map((id) => categories.find((c) => c._id === id)?.name).filter(Boolean).join('، ') || '—';
 
   const persistOrder = async (next: Project[]) => {
     const previous = projects;
@@ -136,7 +136,7 @@ const ProjectsPanel: React.FC = () => {
 
   const onSaved = (saved: Project, isNew: boolean) => {
     setEditorOpen(false);
-    const withCat = { ...saved, category: categories.find((c) => c._id === categoryIdOf(saved)) || saved.category };
+    const withCat = { ...saved, category: categories.find((c) => c._id === categoryIdOf(saved)) || saved.category, categories: categoryIdsOf(saved) };
     setProjects((list) => (isNew ? [withCat, ...list] : list.map((p) => (p._id === saved._id ? { ...p, ...withCat } : p))));
     refreshStats();
   };
@@ -161,7 +161,7 @@ const ProjectsPanel: React.FC = () => {
       <div className="card mb-4 flex flex-col gap-3 p-3 md:flex-row md:items-center">
         <label className="relative flex-1">
           <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input className="field pr-9" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ابحث بالعنوان أو المادة..." aria-label="بحث" />
+          <input className="field pr-9" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ابحث بالعنوان أو الكود أو المادة..." aria-label="بحث" />
         </label>
         <select className="field md:w-48" value={catFilter} onChange={(e) => setCatFilter(e.target.value)} aria-label="الفئة">
           <option value="">كل الفئات</option>
@@ -218,7 +218,7 @@ const ProjectsPanel: React.FC = () => {
                   <button onClick={() => moveBy(p._id, 1)} disabled={i === filtered.length - 1} className="btn-icon !h-6 !w-6" aria-label="تحريك للأسفل"><ChevronDown size={14} /></button>
                 </div>
               )}
-              <button onClick={() => openEditor(p)} className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 sm:h-16 sm:w-20">
+              <button onClick={() => openEditor(p)} className="relative h-16 w-[52px] shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 sm:h-20 sm:w-16">
                 {p.images?.[0] && <img src={p.images[0]} alt="" loading="lazy" className={`h-full w-full object-cover ${p.hidden ? 'grayscale opacity-60' : ''}`} />}
                 {p.images?.length > 1 && <span className="absolute bottom-0.5 left-0.5 rounded bg-black/60 px-1 text-[10px] text-white">{p.images.length}</span>}
               </button>
@@ -229,6 +229,7 @@ const ProjectsPanel: React.FC = () => {
                   {p.bestSeller && <span className="badge bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"><Flame size={11} /> الأكثر مبيعاً</span>}
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                  {p.code ? <span className="font-mono font-semibold text-gray-600 dark:text-gray-300" dir="ltr">#{p.code}</span> : <span className="font-semibold text-red-500">بدون كود</span>}
                   <span>{catName(p)}</span>
                   {Number(p.price) > 0 && <span>{Number(p.price).toFixed(2)} $</span>}
                   {p.votes ? <span className="inline-flex items-center gap-1"><Stars value={p.averageRating || 0} size={11} /> ({p.votes})</span> : <span>بدون تقييم</span>}

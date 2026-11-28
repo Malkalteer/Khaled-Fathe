@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, ImagePlus, Loader2, Star, Trash2 } from 'lucide-react';
-import { api, Category, Project, ProjectInput, categoryIdOf } from '../../services/api';
+import { api, Category, Project, ProjectInput, categoryIdsOf } from '../../services/api';
 import { Modal, useConfirm } from '../ui/Dialog';
 import { useToast } from '../ui/Toast';
 import { Switch } from './ui';
@@ -15,7 +15,8 @@ interface Props {
 
 type FormState = {
   title: string;
-  category: string;
+  code: string;
+  categories: string[];
   images: string[];
   price: string;
   material: string;
@@ -26,13 +27,14 @@ type FormState = {
   bestSeller: boolean;
 };
 
-const empty: FormState = { title: '', category: '', images: [], price: '', material: '', dimensions: '', details: '', description: '', hidden: false, bestSeller: false };
+const empty: FormState = { title: '', code: '', categories: [], images: [], price: '', material: '', dimensions: '', details: '', description: '', hidden: false, bestSeller: false };
 
 const fromProject = (p: Project | null): FormState =>
   p
     ? {
         title: p.title,
-        category: categoryIdOf(p),
+        code: p.code || '',
+        categories: categoryIdsOf(p),
         images: p.images || [],
         price: p.price ? String(p.price) : '',
         material: p.material || '',
@@ -108,7 +110,10 @@ const ProjectEditor: React.FC<Props> = ({ open, project, categories, onClose, on
   const validate = () => {
     const next: typeof errors = {};
     if (!form.title.trim()) next.title = 'العنوان مطلوب';
-    if (!form.category) next.category = 'اختر فئة';
+    if (!form.code.trim()) next.code = 'كود المنتج مطلوب';
+    else if (!/^[\p{L}\p{N}][\p{L}\p{N}_-]{0,29}$/u.test(form.code.trim())) next.code = 'حروف وأرقام و - فقط (حتى 30 خانة)';
+    if (form.categories.length === 0) next.categories = 'اختر فئة واحدة على الأقل';
+    if (form.categories.length > 5) next.categories = 'الحد الأقصى 5 فئات';
     if (form.images.length === 0) next.images = 'أضف صورة واحدة على الأقل';
     if (form.price && (Number.isNaN(Number(form.price)) || Number(form.price) < 0)) next.price = 'سعر غير صالح';
     setErrors(next);
@@ -121,7 +126,9 @@ const ProjectEditor: React.FC<Props> = ({ open, project, categories, onClose, on
     if (!validate()) return;
     const payload: ProjectInput = {
       title: form.title.trim(),
-      category: form.category,
+      code: form.code.trim().toUpperCase(),
+      category: form.categories[0],
+      categories: form.categories,
       images: form.images,
       price: Number(form.price) || 0,
       material: form.material.trim(),
@@ -176,7 +183,7 @@ const ProjectEditor: React.FC<Props> = ({ open, project, categories, onClose, on
         {/* الصور */}
         <section>
           <div className="mb-2 flex items-center justify-between">
-            <span className="field-label !mb-0">الصور <span className="text-xs font-normal text-gray-400">(الأولى هي صورة الغلاف — اسحب لإعادة الترتيب)</span></span>
+            <span className="field-label !mb-0">الصور <span className="text-xs font-normal text-gray-400">(المقاس المثالي: عرض 1080 × ارتفاع 1350 بكسل — الأولى هي الغلاف، اسحب لإعادة الترتيب)</span></span>
             <span className="text-xs text-gray-400">{form.images.length}/20</span>
           </div>
           <div
@@ -193,7 +200,7 @@ const ProjectEditor: React.FC<Props> = ({ open, project, categories, onClose, on
                 onDragEnd={() => setDragIdx(null)}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => { e.preventDefault(); e.stopPropagation(); if (dragIdx !== null) moveImage(dragIdx, idx); setDragIdx(null); }}
-                className={`group relative aspect-square cursor-grab overflow-hidden rounded-xl border bg-gray-100 dark:bg-gray-800 ${
+                className={`group relative aspect-[4/5] cursor-grab overflow-hidden rounded-xl border bg-gray-100 dark:bg-gray-800 ${
                   idx === 0 ? 'border-primary-500 ring-2 ring-primary-500/30' : 'border-gray-200 dark:border-gray-700'
                 } ${dragIdx === idx ? 'opacity-40' : ''}`}
               >
@@ -218,7 +225,7 @@ const ProjectEditor: React.FC<Props> = ({ open, project, categories, onClose, on
               </div>
             ))}
             {Array.from({ length: uploading }).map((_, i) => (
-              <div key={`up-${i}`} className="flex aspect-square items-center justify-center rounded-xl border border-dashed border-primary-400 bg-primary-50 dark:bg-primary-950/30">
+              <div key={`up-${i}`} className="flex aspect-[4/5] items-center justify-center rounded-xl border border-dashed border-primary-400 bg-primary-50 dark:bg-primary-950/30">
                 <Loader2 className="animate-spin text-primary-600" />
               </div>
             ))}
@@ -226,7 +233,7 @@ const ProjectEditor: React.FC<Props> = ({ open, project, categories, onClose, on
               <button
                 type="button"
                 onClick={() => fileInput.current?.click()}
-                className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-gray-300 text-gray-400 transition hover:border-primary-400 hover:text-primary-600 dark:border-gray-700"
+                className="flex aspect-[4/5] flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-gray-300 text-gray-400 transition hover:border-primary-400 hover:text-primary-600 dark:border-gray-700"
               >
                 <ImagePlus size={24} />
                 <span className="text-xs">إضافة صور</span>
@@ -245,12 +252,42 @@ const ProjectEditor: React.FC<Props> = ({ open, project, categories, onClose, on
             {fieldError('title')}
           </div>
           <div>
-            <label className="field-label" htmlFor="p-cat">الفئة *</label>
-            <select id="p-cat" className="field" value={form.category} onChange={(e) => set('category', e.target.value)}>
-              <option value="" disabled>اختر فئة</option>
-              {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
-            </select>
-            {fieldError('category')}
+            <label className="field-label" htmlFor="p-code">كود المنتج *</label>
+            <input
+              id="p-code"
+              className="field font-mono uppercase"
+              dir="ltr"
+              value={form.code}
+              onChange={(e) => set('code', e.target.value.replace(/\s+/g, '-'))}
+              maxLength={30}
+              placeholder="DOOR-001"
+            />
+            <p className="mt-1 text-xs text-gray-400">يُرسل مع طلبات واتساب، ولا يتكرر بين المنتجات.</p>
+            {fieldError('code')}
+          </div>
+          <div className="sm:col-span-2">
+            <span className="field-label">الفئات * <span className="text-xs font-normal text-gray-400">(اختر فئة أو أكثر — الأولى هي الأساسية)</span></span>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((c) => {
+                const index = form.categories.indexOf(c._id);
+                const on = index !== -1;
+                return (
+                  <button
+                    key={c._id}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => set('categories', on ? form.categories.filter((id) => id !== c._id) : [...form.categories, c._id])}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                      on ? 'border-primary-600 bg-primary-600 text-white' : 'border-gray-300 text-gray-600 hover:border-primary-400 dark:border-gray-700 dark:text-gray-300'
+                    }`}
+                  >
+                    {on && <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/25 text-[10px] font-bold">{index + 1}</span>}
+                    {c.name}
+                  </button>
+                );
+              })}
+            </div>
+            {fieldError('categories')}
           </div>
           <div>
             <label className="field-label" htmlFor="p-price">السعر ($)</label>

@@ -4,6 +4,7 @@ const User = require("../models/User");
 const Review = require("../models/Review");
 const ProductInteraction = require("../models/ProductInteraction");
 const HttpError = require("../utils/httpError");
+const { normalizeEmail } = require("../utils/email");
 const {
   issueTokens,
   hashRefreshToken,
@@ -24,7 +25,9 @@ const publicUser = (user) => ({
   username: user.username,
   email: user.email,
   phone: user.phone,
-  isAdmin: Boolean(user.isAdmin)
+  isAdmin: Boolean(user.isAdmin),
+  avatar: user.avatar || "",
+  hasPassword: Boolean(user.password)
 });
 
 const recordFailedLogin = async (user, req) => {
@@ -53,7 +56,8 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
-  const passwordMatches = await bcrypt.compare(password, user ? user.password : DUMMY_HASH);
+  // من سجّل عبر جوجل فقط ليس لديه كلمة مرور
+  const passwordMatches = await bcrypt.compare(password, user && user.password ? user.password : DUMMY_HASH) && Boolean(user && user.password);
 
   const locked = user && user.lockoutUntil && user.lockoutUntil > new Date();
   if (!user || locked || !passwordMatches) {
@@ -65,6 +69,60 @@ exports.login = async (req, res) => {
   user.lockoutUntil = null;
   await issueTokens(user, res);
   res.status(200).json({ message: "تم تسجيل الدخول", user: publicUser(user) });
+};
+
+// ---------- تسجيل الدخول عبر جوجل ----------
+let googleVerifier = null;
+const verifyGoogleToken = async (credential) => {
+  if (googleVerifier) return googleVerifier(credential); // للاختبارات
+  const { OAuth2Client } = require("google-auth-library");
+  const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  const ticket = await client.verifyIdToken({ idToken: credential, audience: process.env.GOOGLE_CLIENT_ID });
+  return ticket.getPayload();
+};
+exports._setGoogleVerifier = (fn) => { googleVerifier = fn; };
+
+// GET /api/auth/config — إعدادات عامة تحتاجها الواجهة (Client ID ليس سراً)
+exports.config = (req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID || null });
+};
+
+// POST /api/auth/google  { credential }
+exports.googleLogin = async (req, res) => {
+  if (!process.env.GOOGLE_CLIENT_ID) throw new HttpError(503, "تسجيل الدخول عبر جوجل غير مفعّل حالياً");
+
+  let payload;
+  try {
+    payload = await verifyGoogleToken(req.body.credential);
+  } catch (error) {
+    console.warn("Google token rejected:", error.message);
+    throw new HttpError(401, "تعذر التحقق من حساب جوجل، حاول مرة أخرى");
+  }
+  if (!payload || !payload.sub || !payload.email || payload.email_verified === false) {
+    throw new HttpError(401, "يجب أن يكون بريد حساب جوجل موثّقاً");
+  }
+
+  const email = normalizeEmail(payload.email);
+  let user = await User.findOne({ googleId: payload.sub }) || await User.findOne({ email });
+
+  if (user) {
+    // ربط حساب موجود (بنفس البريد الموثّق) بجوجل
+    if (!user.googleId) user.googleId = payload.sub;
+    if (!user.avatar && payload.picture) user.avatar = payload.picture;
+  } else {
+    user = new User({
+      username: (payload.name || email.split("@")[0]).slice(0, 80),
+      email,
+      googleId: payload.sub,
+      avatar: payload.picture || "",
+      isAdmin: false
+    });
+  }
+  user.failedLoginAttempts = 0;
+  user.lockoutUntil = null;
+  await issueTokens(user, res); // يحفظ المستخدم أيضاً
+  res.json({ message: "تم تسجيل الدخول", user: publicUser(user) });
 };
 
 exports.refresh = async (req, res) => {

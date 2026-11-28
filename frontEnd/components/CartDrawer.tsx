@@ -20,6 +20,7 @@ export const CartDrawer: React.FC = () => {
     let message = 'مرحباً مهندس خالد 👋\nأرغب في شراء المنتجات التالية:\n\n';
     cart.forEach((item, index) => {
       message += `🔹 *${index + 1}. ${item.title}*\n`;
+      if (item.code) message += `   • كود المنتج: ${item.code}\n`;
       if (item.category) message += `   • القسم: ${item.category}\n`;
       message += `   • الكمية: ${item.quantity}\n`;
       message += `   • السعر: ${formatPrice(item.price)}\n\n`;
@@ -59,7 +60,10 @@ export const CartDrawer: React.FC = () => {
                     )}
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-sm line-clamp-1">{item.title}</h4>
-                      <div className="text-xs font-bold text-primary-600 dark:text-primary-400 mt-0.5">{formatPrice(item.price)}</div>
+                      <div className="text-xs font-bold text-primary-600 dark:text-primary-400 mt-0.5">
+                        {formatPrice(item.price)}
+                        {item.code && <span className="mr-2 font-mono font-normal text-gray-400" dir="ltr">#{item.code}</span>}
+                      </div>
                       <div className="flex items-center gap-2 mt-2">
                         <button onClick={() => updateQuantity(item._id, -1)} aria-label="إنقاص" className="p-1 bg-gray-200 dark:bg-gray-800 rounded hover:bg-gray-300 dark:hover:bg-gray-700">
                           <Minus size={14} />

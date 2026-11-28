@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { FolderTree, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
-import { api, Category, categoryIdOf } from '../../services/api';
+import { api, Category, categoryIdsOf } from '../../services/api';
 import { Modal, useConfirm } from '../ui/Dialog';
 import { useToast } from '../ui/Toast';
 import { useAdmin } from './AdminDashboard';
@@ -26,10 +26,9 @@ const CategoriesPanel: React.FC = () => {
       .then(([cats, projects]) => {
         setCategories(cats);
         const map: Record<string, number> = {};
-        projects.forEach((p) => {
-          const id = categoryIdOf(p);
+        projects.forEach((p) => categoryIdsOf(p).forEach((id) => {
           map[id] = (map[id] || 0) + 1;
-        });
+        }));
         setCounts(map);
       })
       .catch((e) => toast.error(e))
@@ -146,7 +145,7 @@ const CategoriesPanel: React.FC = () => {
           <SingleImageUpload
             value={image}
             label="صورة الفئة"
-            hint="المقاس المثالي 1080×1350"
+            hint="المقاس المثالي: عرض 1080 × ارتفاع 1350 بكسل"
             aspect="aspect-[4/5] max-w-[260px] mx-auto"
             onUpload={async (file) => {
               try {

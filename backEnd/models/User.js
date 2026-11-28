@@ -13,13 +13,22 @@ const UserSchema = new mongoose.Schema(
       unique: true,
       lowercase: true
     },
+    // غير مطلوبة لمن يسجل عبر جوجل فقط
     password: {
       type: String,
-      required: true
+      required: function passwordRequired() { return !this.googleId; }
     },
     phone: {
       type: String,
-      required: true
+      default: ""
+    },
+    googleId: {
+      type: String,
+      default: undefined
+    },
+    avatar: {
+      type: String,
+      default: ""
     },
     isAdmin: {
       type: Boolean,
@@ -56,5 +65,7 @@ const UserSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+UserSchema.index({ googleId: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model("User", UserSchema);

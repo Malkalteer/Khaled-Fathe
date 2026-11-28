@@ -6,10 +6,19 @@ const { withStats, getUserId } = require('../services/productStats');
 
 const SORT = { order: 1, createdAt: -1 };
 
+const POPULATE = [{ path: 'category' }, { path: 'categories' }];
+
+const pickCategories = (body) => {
+  const list = Array.isArray(body.categories) && body.categories.length > 0 ? body.categories : [body.category];
+  return [...new Set(list.filter(Boolean).map(String))];
+};
+
 const pickProjectFields = (body) => ({
   title: body.title,
+  code: body.code,
   images: body.images,
-  category: body.category,
+  categories: pickCategories(body),
+  category: pickCategories(body)[0],
   description: body.description || '',
   price: Number(body.price) || 0,
   material: body.material || '',
@@ -19,25 +28,31 @@ const pickProjectFields = (body) => ({
   ...(typeof body.bestSeller === 'boolean' ? { bestSeller: body.bestSeller } : {}),
 });
 
-const ensureCategory = async (categoryId) => {
-  if (!(await Category.exists({ _id: categoryId }))) throw new HttpError(400, 'الفئة المختارة غير موجودة');
+const ensureCategories = async (ids) => {
+  const found = await Category.countDocuments({ _id: { $in: ids } });
+  if (found !== ids.length) throw new HttpError(400, 'إحدى الفئات المختارة غير موجودة');
+};
+
+const ensureUniqueCode = async (code, exceptId) => {
+  const clash = await Project.exists({ code, ...(exceptId ? { _id: { $ne: exceptId } } : {}) });
+  if (clash) throw new HttpError(409, `الكود ${code} مستخدم لمنتج آخر`);
 };
 
 // GET /api/projects — الأعمال الظاهرة فقط مع إحصائيات التقييم والمفضلة (طلب واحد)
 exports.getProjects = async (req, res) => {
-  const projects = await Project.find({ hidden: { $ne: true } }).populate('category').sort(SORT).lean();
+  const projects = await Project.find({ hidden: { $ne: true } }).populate(POPULATE).sort(SORT).lean();
   res.json(await withStats(projects, getUserId(req)));
 };
 
 // GET /api/projects/admin — كل الأعمال بما فيها المخفية
 exports.getAdminProjects = async (req, res) => {
-  const projects = await Project.find().populate('category').sort(SORT).lean();
+  const projects = await Project.find().populate(POPULATE).sort(SORT).lean();
   res.json(await withStats(projects));
 };
 
 // GET /api/projects/:id
 exports.getProject = async (req, res) => {
-  const project = await Project.findById(req.params.id).populate('category').lean();
+  const project = await Project.findById(req.params.id).populate(POPULATE).lean();
   const isAdmin = Boolean(req.user && req.user.isAdmin);
   if (!project || (project.hidden && !isAdmin)) throw new HttpError(404, 'العمل غير موجود');
   const [withData] = await withStats([project], getUserId(req));
@@ -46,7 +61,8 @@ exports.getProject = async (req, res) => {
 
 exports.createProject = async (req, res) => {
   const data = pickProjectFields(req.body);
-  await ensureCategory(data.category);
+  await ensureCategories(data.categories);
+  await ensureUniqueCode(data.code);
   // العمل الجديد يظهر أولاً
   const first = await Project.findOne().sort({ order: 1 }).select('order').lean();
   const project = await Project.create({ ...data, order: first ? first.order - 1 : 0 });
@@ -55,7 +71,8 @@ exports.createProject = async (req, res) => {
 
 exports.updateProject = async (req, res) => {
   const data = pickProjectFields(req.body);
-  await ensureCategory(data.category);
+  await ensureCategories(data.categories);
+  await ensureUniqueCode(data.code, req.params.id);
   const project = await Project.findByIdAndUpdate(req.params.id, data, { returnDocument: 'after', runValidators: true });
   if (!project) throw new HttpError(404, 'العمل غير موجود');
   res.json(project);

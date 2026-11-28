@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { ArrowRight, ChevronLeft, ChevronRight, Flame, Share2, ShoppingBag, ShoppingCart } from 'lucide-react';
-import { api, Project, categoryIdOf, categoryNameOf } from '../services/api';
+import { api, Category, Project, categoryIdOf, categoryIdsOf, categoryNameOf } from '../services/api';
+import SimilarProducts from './SimilarProducts';
 import { useCart } from '../context/CartContext';
 import { ProductRating } from './ProductRating';
 import { useToast } from './ui/Toast';
@@ -30,7 +31,17 @@ const ProductPage: React.FC = () => {
       .then(([p, all]) => {
         if (cancelled) return;
         setProject(p);
-        setRelated(all.filter((x) => x._id !== p._id && categoryIdOf(x) === categoryIdOf(p)).slice(0, 4));
+        // منتجات تشترك مع هذا المنتج في فئة واحدة على الأقل، الأكثر اشتراكاً ثم الأعلى تقييماً
+        const mine = categoryIdsOf(p);
+        setRelated(
+          all
+            .filter((x) => x._id !== p._id)
+            .map((x) => ({ x, shared: categoryIdsOf(x).filter((id) => mine.includes(id)).length }))
+            .filter(({ shared }) => shared > 0)
+            .sort((a, b) => b.shared - a.shared || (b.x.averageRating ?? 0) - (a.x.averageRating ?? 0))
+            .slice(0, 12)
+            .map(({ x }) => x)
+        );
         setError('');
       })
       .catch((e) => !cancelled && setError(e.message))
@@ -84,7 +95,7 @@ const ProductPage: React.FC = () => {
     }
   };
 
-  const cartItem = { _id: project._id, title: project.title, image: images[0] || '', category: categoryName, price: project.price, averageRating: project.averageRating };
+  const cartItem = { _id: project._id, title: project.title, code: project.code, image: images[0] || '', category: categoryName, price: project.price, averageRating: project.averageRating };
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -94,6 +105,7 @@ const ProductPage: React.FC = () => {
     description: project.description || project.title,
     category: categoryName || undefined,
     material: project.material || undefined,
+    sku: project.code || undefined,
     url: productUrl(project._id),
     brand: { '@type': 'Brand', name: 'KHF Designs' },
     ...(project.votes
@@ -128,11 +140,11 @@ const ProductPage: React.FC = () => {
           <span className="text-gray-800 dark:text-gray-200 line-clamp-1">{project.title}</span>
         </nav>
 
-        <div className="grid lg:grid-cols-[1.4fr_1fr] gap-8 bg-white dark:bg-gray-900 rounded-3xl shadow-xl p-4 md:p-6">
+        <div className="grid md:grid-cols-[minmax(0,460px)_1fr] lg:grid-cols-[minmax(0,520px)_1fr] gap-8 bg-white dark:bg-gray-900 rounded-3xl shadow-xl p-4 md:p-6">
           {/* معرض الصور */}
           <div>
             <div
-              className="relative aspect-[4/3] rounded-2xl bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center"
+              className="relative aspect-[4/5] w-full rounded-2xl bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center"
               onMouseEnter={() => setPaused(true)}
               onMouseLeave={() => setPaused(false)}
             >
@@ -173,10 +185,23 @@ const ProductPage: React.FC = () => {
 
           {/* التفاصيل */}
           <div className="flex flex-col">
-            {categoryName && (
+            {project.categories && project.categories.length > 0 ? (
+              <div className="mb-3 flex flex-wrap gap-1.5">
+                {project.categories.map((c) => typeof c === 'object' && (
+                  <Link key={c._id} to={`/portfolio/${c._id}`} className="bg-primary-100 text-primary-700 dark:bg-primary-950 dark:text-primary-300 px-3 py-1 rounded-full text-xs font-semibold hover:opacity-80">
+                    {(c as Category).name}
+                  </Link>
+                ))}
+              </div>
+            ) : categoryName && (
               <span className="self-start bg-primary-100 text-primary-700 dark:bg-primary-950 dark:text-primary-300 px-3 py-1 rounded-full text-xs font-semibold mb-3">{categoryName}</span>
             )}
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-3">{project.title}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">{project.title}</h1>
+            {project.code && (
+              <div className="mb-3 text-sm text-gray-500 dark:text-gray-400">
+                كود المنتج: <span className="font-mono font-semibold text-gray-700 dark:text-gray-200" dir="ltr">{project.code}</span>
+              </div>
+            )}
             {project.bestSeller && (
               <span className="self-start mb-3 inline-flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white"><Flame size={13} /> الأكثر مبيعاً</span>
             )}
@@ -234,21 +259,7 @@ const ProductPage: React.FC = () => {
           </div>
         </div>
 
-        {related.length > 0 && (
-          <section className="mt-12">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">أعمال مشابهة</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {related.map((r) => (
-                <Link key={r._id} to={`/project/${r._id}`} className="group rounded-2xl overflow-hidden bg-white dark:bg-gray-900 shadow hover:shadow-lg transition">
-                  <div className="aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-800">
-                    {r.images?.[0] && <img src={r.images[0]} alt={r.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition" />}
-                  </div>
-                  <div className="p-3 text-sm font-semibold text-gray-900 dark:text-white line-clamp-1">{r.title}</div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
+        <SimilarProducts products={related} />
       </div>
     </div>
   );

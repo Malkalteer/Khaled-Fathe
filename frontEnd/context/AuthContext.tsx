@@ -29,6 +29,7 @@ interface AuthContextValue {
   /** true حتى ينتهي التحقق من الجلسة عند فتح الموقع */
   checking: boolean;
   login: (email: string, password: string) => Promise<User>;
+  loginWithGoogle: (credential: string) => Promise<User>;
   register: (data: { username: string; email: string; phone: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -80,6 +81,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       checking,
       login: async (email, password) => {
         const { user: next } = await api.login(email, password);
+        setUser(next);
+        return next;
+      },
+      loginWithGoogle: async (credential) => {
+        const { user: next } = await api.googleLogin(credential);
         setUser(next);
         return next;
       },

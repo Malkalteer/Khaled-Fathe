@@ -25,6 +25,7 @@ exports.getUserFavorites = async (req, res) => {
   const favorites = await ProductInteraction.find({ user: userId, favorite: true }).select('product').lean();
   const projects = await Project.find({ _id: { $in: favorites.map((f) => f.product) }, hidden: { $ne: true } })
     .populate('category', '_id name')
+    .populate('categories', '_id name')
     .lean();
   const data = await withStats(projects, userId);
   res.json(data.map((p) => ({
@@ -33,6 +34,8 @@ exports.getUserFavorites = async (req, res) => {
     description: p.description || '',
     images: p.images || [],
     category: p.category || null,
+    categories: p.categories || [],
+    code: p.code,
     price: p.price,
     averageRating: p.averageRating,
     votes: p.votes,
