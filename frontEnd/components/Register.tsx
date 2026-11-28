@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Check, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from './ui/Toast';
+import GoogleSignIn from './GoogleSignIn';
 
 const rules = [
   { test: (p: string) => p.length >= 8, label: '8 أحرف على الأقل' },
@@ -81,6 +82,7 @@ const Register: React.FC = () => {
             {loading ? <><Loader2 className="animate-spin" size={18} /> جاري الإنشاء...</> : 'إنشاء حساب'}
           </button>
         </form>
+        <GoogleSignIn />
         <p className="text-sm mt-5 text-gray-600 dark:text-gray-300">
           لديك حساب؟ <Link to="/login" className="text-primary-600 font-semibold">سجل الدخول</Link>
         </p>

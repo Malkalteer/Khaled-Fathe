@@ -4,6 +4,7 @@ import { useToast } from '../components/ui/Toast';
 export interface CartItem {
   _id: string;
   title: string;
+  code?: string;
   image: string;
   category?: string;
   price?: number;
@@ -36,6 +37,7 @@ const readCart = (): CartItem[] => {
           .map((i: any) => ({
             _id: i._id || i.id,
             title: i.title || i.name || '',
+            code: typeof i.code === 'string' ? i.code : undefined,
             image: i.image || i.imgUrl || i.img || '',
             category: typeof i.category === 'string' ? i.category : undefined,
             price: Number(i.price) || 0,

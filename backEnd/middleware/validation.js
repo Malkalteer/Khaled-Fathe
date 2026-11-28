@@ -47,6 +47,11 @@ exports.registerValidation = [
   handleValidation
 ];
 
+exports.googleValidation = [
+  body("credential").isString().isLength({ min: 20, max: 5000 }).withMessage("بيانات جوجل غير صالحة"),
+  handleValidation
+];
+
 exports.loginValidation = [
   body("email").isEmail().normalizeEmail(),
   body("password").isString().isLength({ min: 1, max: 200 }),
@@ -63,7 +68,19 @@ exports.projectValidation = [
   body("title").isString().trim().isLength({ min: 1, max: 150 }).withMessage("عنوان العمل مطلوب (حتى 150 حرفاً)"),
   body("images").isArray({ min: 1, max: 20 }).withMessage("أضف صورة واحدة على الأقل (حتى 20 صورة)"),
   httpsUrl("images.*", "رابط الصورة"),
-  body("category").isMongoId().withMessage("اختر فئة صحيحة"),
+  body("code")
+    .isString().withMessage("كود المنتج مطلوب")
+    .trim()
+    .toUpperCase()
+    .matches(/^[\p{L}\p{N}][\p{L}\p{N}_-]{0,29}$/u)
+    .withMessage("كود المنتج مطلوب: حروف وأرقام و - فقط، حتى 30 خانة"),
+  body("categories").optional().isArray({ min: 1, max: 5 }).withMessage("اختر من فئة إلى 5 فئات"),
+  body("categories.*").isMongoId().withMessage("اختر فئة صحيحة"),
+  body("category").optional().isMongoId().withMessage("اختر فئة صحيحة"),
+  body("categories").custom((value, { req }) => {
+    if ((Array.isArray(value) && value.length > 0) || req.body.category) return true;
+    throw new Error("اختر فئة واحدة على الأقل");
+  }),
   body("description").optional({ values: "null" }).isString().trim().isLength({ max: 3000 }),
   body("price").optional({ values: "null" }).isFloat({ min: 0, max: 10000000 }).withMessage("السعر غير صالح").toFloat(),
   body("material").optional({ values: "null" }).isString().trim().isLength({ max: 200 }),

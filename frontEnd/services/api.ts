@@ -18,7 +18,12 @@ export interface ProductStats {
 export interface Project extends ProductStats {
   _id: string;
   title: string;
+  /** كود المنتج (فريد) */
+  code?: string;
+  /** الفئة الأساسية */
   category: string | Category;
+  /** كل الفئات التي يظهر فيها المنتج */
+  categories?: (string | Category)[];
   images: string[];
   description: string;
   price?: number;
@@ -39,6 +44,8 @@ export interface User {
   email: string;
   phone?: string;
   isAdmin: boolean;
+  avatar?: string;
+  hasPassword?: boolean;
 }
 
 export interface AdminUser {
@@ -95,6 +102,17 @@ export interface AdminStats {
 export const categoryIdOf = (project: Pick<Project, 'category'>): string =>
   !project.category ? '' : typeof project.category === 'string' ? project.category : project.category._id;
 
+const idOf = (c: string | Category | undefined | null) => (!c ? '' : typeof c === 'string' ? c : c._id);
+
+/** كل فئات المنتج (يدعم المنتجات القديمة ذات الفئة الواحدة) */
+export const categoryIdsOf = (project: Pick<Project, 'category' | 'categories'>): string[] => {
+  const list = project.categories && project.categories.length > 0 ? project.categories.map(idOf) : [idOf(project.category)];
+  return [...new Set(list.filter(Boolean))];
+};
+
+export const inCategory = (project: Pick<Project, 'category' | 'categories'>, categoryId: string) =>
+  categoryIdsOf(project).includes(categoryId);
+
 export const categoryNameOf = (project: Pick<Project, 'category'>, categories: Category[] = []): string => {
   if (project.category && typeof project.category === 'object' && project.category.name) return project.category.name;
   return categories.find((c) => c._id === categoryIdOf(project))?.name || '';
@@ -102,8 +120,9 @@ export const categoryNameOf = (project: Pick<Project, 'category'>, categories: C
 
 const toPayload = (proj: ProjectInput) => ({
   title: proj.title.trim(),
+  code: (proj.code || '').trim().toUpperCase(),
   images: proj.images.filter(Boolean),
-  category: typeof proj.category === 'string' ? proj.category : proj.category._id,
+  categories: categoryIdsOf(proj),
   description: proj.description || '',
   price: Number(proj.price) || 0,
   material: proj.material || '',
@@ -121,6 +140,9 @@ export const api = {
   register: (data: { username: string; email: string; phone: string; password: string }) =>
     apiFetch<{ user: User }>('/api/auth/register', { method: 'POST', body: data, noRefresh: true }),
   logout: () => apiFetch('/api/auth/logout', { method: 'POST', noRefresh: true }),
+  googleLogin: (credential: string) =>
+    apiFetch<{ user: User }>('/api/auth/google', { method: 'POST', body: { credential }, noRefresh: true }),
+  authConfig: () => apiFetch<{ googleClientId: string | null }>('/api/auth/config', { noRefresh: true }),
   me: () => apiFetch<{ user: User }>('/api/auth/me'),
 
   // ---------- Content ----------

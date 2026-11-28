@@ -1,6 +1,7 @@
 const app = require("./app");
 const connectDB = require("./config/db");
 const seedAdmin = require("./seed");
+const runMigrations = require("./migrations");
 
 const PORT = process.env.PORT || 5000;
 
@@ -11,6 +12,7 @@ const start = async () => {
       console.warn("Warning: JWT_SECRET is shorter than 32 characters; use a longer random secret.");
     }
     await connectDB();
+    await runMigrations();
     await seedAdmin();
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (error) {

@@ -21,7 +21,7 @@ exports.updateCategory = async (req, res) => {
 };
 
 exports.deleteCategory = async (req, res) => {
-  const count = await Project.countDocuments({ category: req.params.id });
+  const count = await Project.countDocuments({ $or: [{ category: req.params.id }, { categories: req.params.id }] });
   if (count > 0) {
     throw new HttpError(409, `لا يمكن حذف الفئة لأنها تحتوي على ${count} عمل. انقل الأعمال أو احذفها أولاً.`);
   }

@@ -17,7 +17,7 @@ const ProductCard: React.FC<Props> = ({ project, categoryName, index = 0, footer
   const { addToCart } = useCart();
   const image = project.images?.[0] || '';
   const url = `/project/${project._id}`;
-  const item = { _id: project._id, title: project.title, image, category: categoryName, price: project.price, averageRating: project.averageRating };
+  const item = { _id: project._id, title: project.title, code: project.code, image, category: categoryName, price: project.price, averageRating: project.averageRating };
   const hasPrice = Number(project.price) > 0;
 
   return (
@@ -25,7 +25,7 @@ const ProductCard: React.FC<Props> = ({ project, categoryName, index = 0, footer
       className="bg-white dark:bg-dark-card rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 group flex flex-col animate-card-in"
       style={{ animationDelay: `${Math.min(index * 80, 480)}ms` }}
     >
-      <Link to={url} className="relative block overflow-hidden aspect-[4/3] bg-gray-100 dark:bg-gray-800" aria-label={`عرض تفاصيل ${project.title}`}>
+      <Link to={url} className="relative block overflow-hidden aspect-[4/5] bg-gray-100 dark:bg-gray-800" aria-label={`عرض تفاصيل ${project.title}`}>
         {image && (
           <img src={image} alt={project.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
         )}
@@ -42,9 +42,12 @@ const ProductCard: React.FC<Props> = ({ project, categoryName, index = 0, footer
       </Link>
 
       <div className="p-5 flex flex-col flex-1">
-        {categoryName && (
-          <span className="inline-block self-start bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs px-2.5 py-1 rounded-md mb-2 font-medium">{categoryName}</span>
-        )}
+        <div className="mb-2 flex items-center justify-between gap-2">
+          {categoryName ? (
+            <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs px-2.5 py-1 rounded-md font-medium">{categoryName}</span>
+          ) : <span />}
+          {project.code && <span className="text-[11px] font-mono text-gray-400" dir="ltr">#{project.code}</span>}
+        </div>
         <Link to={url}>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 hover:text-primary-600 transition-colors">{project.title}</h3>
         </Link>
